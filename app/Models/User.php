@@ -42,4 +42,26 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function createdPermissions()
+    {
+        return $this->hasMany(Permission::class, "permission_id");
+    }
+
+    public function assigningPermissions()
+    {
+        return $this->belongsToMany(Permission::class, "permission_user", "assigner_id")
+            ->withTimestamps();
+    }
+
+    public function assignedPermissions()
+    {
+        return $this->belongsToMany(Permission::class, "permission_user", "assignee_id")
+            ->withTimestamps();
+    }
+
+    public function suggestions()
+    {
+        return $this->hasMany(Suggestion::class);
+    }
 }
