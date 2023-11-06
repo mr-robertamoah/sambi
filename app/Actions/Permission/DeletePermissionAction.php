@@ -10,8 +10,7 @@ class DeletePermissionAction extends Action
 {
     public function execute(PermissionDTO $permissionDTO) : bool
     {
-        Authorization::query()->whereAuthorization($permissionDTO->permission)->delete();
-        $permissionDTO->permission->roles()->detach();
+        $permissionDTO->permission->assignedUsers()->detach();
         return (bool) $permissionDTO->permission->delete();
     }
 }

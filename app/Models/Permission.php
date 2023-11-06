@@ -23,4 +23,25 @@ class Permission extends Model
         return $this->belongsToMany(User::class, "permission_user", "permission_id")
             ->withTimestamps();
     }
+
+    public function scopeWherePermissionName($query, string $name)
+    {
+        return $query->where(function ($query) use ($name) {
+            $query->where("name", $name);
+        });
+    }
+
+    public function scopeWherePermissionIsLike($query, string $name)
+    {
+        return $query->where(function ($query) use ($name) {
+            $query->where("name", "LIKE", "%{$name}%");
+        });
+    }
+
+    public function scopeWherePermissionNames($query, array $names)
+    {
+        return $query->where(function ($query) use ($names) {
+            $query->whereIn("name", $names);
+        });
+    }
 }

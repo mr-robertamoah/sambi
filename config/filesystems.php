@@ -39,7 +39,8 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => 'http://127.0.0.1:8000/storage',
+            // 'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
             'throw' => false,
         ],

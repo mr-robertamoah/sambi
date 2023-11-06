@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class);
             $table->string("name");
             $table->text("description")->nullable();
-            $table->integer("selling_price");
+            $table->float("selling_price", 10);
             $table->timestamps();
         });
     }

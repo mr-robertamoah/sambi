@@ -12,16 +12,10 @@ class UpdatePermissionAction extends Action
         $data = [
             'name' => $permissionDTO->name,
             'description' => $permissionDTO->description,
-            'public' => $permissionDTO->public,
         ];
 
         $data = array_filter($data, fn($value) => !is_null($value));
-
-        if ($permissionDTO->permission->class != $permissionDTO->class)
-        {
-            $data['class'] = $permissionDTO->class;
-        }
-
+        
         $permissionDTO->permission->update($data);
 
         return $permissionDTO->permission->refresh();

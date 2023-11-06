@@ -3,7 +3,10 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Traits\HasFileableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -11,6 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+    use HasFileableTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -51,17 +55,46 @@ class User extends Authenticatable
     public function assigningPermissions()
     {
         return $this->belongsToMany(Permission::class, "permission_user", "assigner_id")
-            ->withTimestamps();
+            ->withTimestamps()
+            ->withPivot("assignee_id");
     }
 
     public function assignedPermissions()
     {
         return $this->belongsToMany(Permission::class, "permission_user", "assignee_id")
-            ->withTimestamps();
+            ->withTimestamps()
+            ->withPivot("assigner_id");
     }
 
     public function suggestions()
     {
         return $this->hasMany(Suggestion::class);
+    }
+
+    public function addedFiles()
+    {
+        return $this->hasMany(File::class);
+    }
+
+    public function addedProducts()
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function addedPermissions()
+    {
+        return $this->hasMany(Permission::class);
+    }
+
+    public function isPermittedTo(
+        ?string $name = null,
+        ?array $names = null,
+    ) {
+        $query = $this->assignedPermissions();
+
+        if ($name) $query->wherePermissionName($name);
+        if ($names) $query->wherePermissionNames($names);
+        
+        return $query->exists();
     }
 }

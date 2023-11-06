@@ -12,10 +12,12 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.2",
         "laravel/tinker": "^2.8",
+        "mr-robertamoah/dto": "^1.0",
         "tightenco/ziggy": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
+        "laradumps/laradumps": "^2.2",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
         "mockery/mockery": "^1.4.4",

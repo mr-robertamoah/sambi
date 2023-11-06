@@ -4,6 +4,7 @@ import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
+import notCurrentRoute from '@/Helpers/notCurrentRoute';
 
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
@@ -20,11 +21,11 @@ export default function Authenticated({ user, header, children }) {
                                 </Link>
                             </div>
 
-                            <div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                            {notCurrentRoute("dashboard") && (<div className="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                                 <NavLink href={route('dashboard')} active={route().current('dashboard')}>
                                     Dashboard
                                 </NavLink>
-                            </div>
+                            </div>)}
                         </div>
 
                         <div className="hidden sm:flex sm:items-center sm:ml-6">
@@ -91,11 +92,11 @@ export default function Authenticated({ user, header, children }) {
                 </div>
 
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
-                    <div className="pt-2 pb-3 space-y-1">
+                    {notCurrentRoute("dashboard") && (<div className="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
                             Dashboard
                         </ResponsiveNavLink>
-                    </div>
+                    </div>)}
 
                     <div className="pt-4 pb-1 border-t border-gray-200">
                         <div className="px-4">

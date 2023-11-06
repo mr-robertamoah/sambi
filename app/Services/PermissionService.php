@@ -3,38 +3,29 @@
 namespace App\Services;
 
 use App\Actions\EnsureUserExistsAction;
-use App\Actions\EnsureValidGetAuthorizationsDataAction;
+use App\Actions\Permission\EnsureValidGetDataAction;
+use App\Actions\Permission\EnsurePermissionsWhereGivenAction;
 use App\Actions\Permission\EnsureUserIsAuthorizedAction;
 use App\Actions\GetModelFromDTOAction;
-use App\Actions\Permission\SyncPermissionsAndRoleAction;
 use App\Actions\Permission\CreatePermissionAction;
 use App\Actions\Permission\DeletePermissionAction;
 use App\Actions\Permission\EnsurePermissionExistsAction;
-use App\Actions\Permission\EnsurePermissionsExistAndAreOfSameClassAction;
-use App\Actions\Role\EnsureRoleExistsAction;
-use App\Actions\Role\EnsureUserCreatedRoleAction;
+use App\Actions\Permission\EnsurePermissionsExistAction;
 use App\Actions\Permission\EnsureValidDataExistsAction;
 use App\Actions\Permission\GetPermissionsAction;
+use App\Actions\Permission\SyncPermissionsAndUserAction;
 use App\Actions\Permission\UpdatePermissionAction;
-use App\Actions\SetAuthorizationClassAction;
 use App\DTOs\PermissionDTO;
 use App\Models\Permission;
-use App\Models\Role;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-class PermissionService extends Service
+class PermissionService extends BaseService
 {
     public function createPermission(PermissionDTO $permissionDTO) : Permission
     {
-        $permissionDTO = $permissionDTO->withUser(
-            GetModelFromDTOAction::make()->execute($permissionDTO)
-        );
-
-        EnsureUserExistsAction::make()->execute($permissionDTO, "user");
+        EnsureUserExistsAction::make()->execute($permissionDTO);
 
         EnsureUserIsAuthorizedAction::make()->execute($permissionDTO);
-
-        $permissionDTO = SetAuthorizationClassAction::make()->execute($permissionDTO);
 
         EnsureValidDataExistsAction::make()->execute($permissionDTO);
 
@@ -43,11 +34,8 @@ class PermissionService extends Service
 
     public function updatePermission(PermissionDTO $permissionDTO)
     {
-        $permissionDTO = $permissionDTO->withUser(
-            GetModelFromDTOAction::make()->execute($permissionDTO)
-        );
 
-        EnsureUserExistsAction::make()->execute($permissionDTO, "user");
+        EnsureUserExistsAction::make()->execute($permissionDTO);
 
         $permissionDTO = $permissionDTO->withPermission(
             GetModelFromDTOAction::make()->execute(
@@ -57,9 +45,7 @@ class PermissionService extends Service
 
         EnsurePermissionExistsAction::make()->execute($permissionDTO);
 
-        EnsureUserIsAuthorizedAction::make()->execute($permissionDTO, action: "update");
-
-        $permissionDTO = SetAuthorizationClassAction::make()->execute($permissionDTO);
+        EnsureUserIsAuthorizedAction::make()->execute($permissionDTO);
 
         EnsureValidDataExistsAction::make()->execute($permissionDTO, true);
 
@@ -68,12 +54,8 @@ class PermissionService extends Service
     
     public function deletePermission(PermissionDTO $permissionDTO) : bool
     {
-        $permissionDTO = $permissionDTO->withUser(
-            GetModelFromDTOAction::make()->execute($permissionDTO)
-        );
+        EnsureUserExistsAction::make()->execute($permissionDTO);
 
-        EnsureUserExistsAction::make()->execute($permissionDTO, "user");
-        
         $permissionDTO = $permissionDTO->withPermission(
             GetModelFromDTOAction::make()->execute(
                 $permissionDTO, "permission", "permission"
@@ -89,39 +71,23 @@ class PermissionService extends Service
     
     public function getPermissions(PermissionDTO $permissionDTO) : LengthAwarePaginator
     {
-        $permissionDTO = $permissionDTO->withUser(
-            GetModelFromDTOAction::make()->execute($permissionDTO)
-        );
-
-        EnsureUserExistsAction::make()->execute($permissionDTO, "user");
-
-        $permissionDTO = SetAuthorizationClassAction::make()->execute($permissionDTO);
+        EnsureUserExistsAction::make()->execute($permissionDTO);
         
-        EnsureValidGetAuthorizationsDataAction::make()->execute($permissionDTO);
+        EnsureValidGetDataAction::make()->execute($permissionDTO);
 
         return GetPermissionsAction::make()->execute($permissionDTO);
     }
     
-    public function syncPermissionsAndRole(PermissionDTO $permissionDTO) : Role
+    public function syncPermissionsAndUser(PermissionDTO $permissionDTO)
     {
-        $permissionDTO = $permissionDTO->withUser(
-            GetModelFromDTOAction::make()->execute($permissionDTO)
-        );
+        EnsureUserExistsAction::make()->execute($permissionDTO);
 
-        EnsureUserExistsAction::make()->execute($permissionDTO, "user");
+        EnsurePermissionsWhereGivenAction::make()->execute($permissionDTO);
 
-        $permissionDTO = $permissionDTO->withRole(
-            GetModelFromDTOAction::make()->execute(
-                $permissionDTO, "role", "role"
-            )
-        );
+        EnsurePermissionsExistAction::make()->execute($permissionDTO);
 
-        EnsureRoleExistsAction::make()->execute($permissionDTO);
+        EnsureUserIsAuthorizedAction::make()->execute($permissionDTO, action: "assign");
 
-        EnsurePermissionsExistAndAreOfSameClassAction::make()->execute($permissionDTO);
-
-        EnsureUserCreatedRoleAction::make()->execute($permissionDTO);
-
-        return SyncPermissionsAndRoleAction::make()->execute($permissionDTO);
+        return SyncPermissionsAndUserAction::make()->execute($permissionDTO);
     } 
 }

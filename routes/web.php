@@ -3,10 +3,16 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\CostItemController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\StatsController;
+use App\Http\Controllers\UserController;
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,61 +32,65 @@ Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/stats', StatsController::class)
+    ->middleware(['auth', 'verified'])->name('stats');
 
 Route::middleware('auth')->group(function () {
     Route::get('/category/{category}', [CategoryController::class, 'edit'])->name('category.show');
-    Route::post('/category/{category}', [CategoryController::class, 'edit'])->name('category.edit');
-    Route::patch('/category/{category}', [CategoryController::class, 'update'])->name('category.update');
-    Route::delete('/category/{category}', [CategoryController::class, 'destroy'])->name('category.destroy');
+    Route::post('/category/{category}', [CategoryController::class, 'update'])->name('category.update');
+    Route::delete('/category/{category}', [CategoryController::class, 'delete'])->name('category.delete');
     Route::post('/category', [CategoryController::class, 'create'])->name('category.create');
     Route::get('/category', [CategoryController::class, 'index'])->name('category.index');
     
     Route::get('/product/{product}', [ProductController::class, 'edit'])->name('product.show');
-    Route::post('/product/{product}', [ProductController::class, 'edit'])->name('product.edit');
-    Route::patch('/product/{product}', [ProductController::class, 'update'])->name('product.update');
-    Route::delete('/product/{product}', [ProductController::class, 'destroy'])->name('product.destroy');
+    Route::post('/product/{product}', [ProductController::class, 'update'])->name('product.update');
+    Route::delete('/product/{product}', [ProductController::class, 'delete'])->name('product.delete');
     Route::post('/product', [ProductController::class, 'create'])->name('product.create');
     Route::get('/product', [ProductController::class, 'index'])->name('product.index');
     
     Route::get('/cost_item/{cost_item}', [CostItemController::class, 'edit'])->name('cost_item.show');
-    Route::post('/cost_item/{cost_item}', [CostItemController::class, 'edit'])->name('cost_item.edit');
-    Route::patch('/cost_item/{cost_item}', [CostItemController::class, 'update'])->name('cost_item.update');
-    Route::delete('/cost_item/{cost_item}', [CostItemController::class, 'destroy'])->name('cost_item.destroy');
+    Route::post('/cost_item/{cost_item}', [CostItemController::class, 'update'])->name('cost_item.update');
+    Route::delete('/cost_item/{cost_item}', [CostItemController::class, 'delete'])->name('cost_item.delete');
     Route::post('/cost_item', [CostItemController::class, 'create'])->name('cost_item.create');
     Route::get('/cost_item', [CostItemController::class, 'index'])->name('cost_item.index');
+
+    Route::get('/permission/{permission}', [PermissionController::class, 'edit'])->name('permission.show');
+    Route::post('/permission/{permission}', [PermissionController::class, 'update'])->name('permission.update');
+    Route::delete('/permission/{permission}', [PermissionController::class, 'delete'])->name('permission.delete');
+    Route::post('/permission', [PermissionController::class, 'create'])->name('permission.create');
+    Route::get('/permission', [PermissionController::class, 'index'])->name('permission.index');
+    
+    Route::post('/user/{user}', [UserController::class, 'update'])->name('user.update');
+    Route::delete('/user/{user}', [UserController::class, 'delete'])->name('user.delete');
+    Route::get('/user', [UserController::class, 'index'])->name('user.index');
     
     Route::get('/cost/{cost}', [CostController::class, 'edit'])->name('cost.show');
-    Route::post('/cost/{cost}', [CostController::class, 'edit'])->name('cost.edit');
-    Route::patch('/cost/{cost}', [CostController::class, 'update'])->name('cost.update');
-    Route::delete('/cost/{cost}', [CostController::class, 'destroy'])->name('cost.destroy');
+    Route::post('/cost/{cost}', [CostController::class, 'update'])->name('cost.update');
+    Route::delete('/cost/{cost}', [CostController::class, 'delete'])->name('cost.delete');
     Route::post('/cost', [CostController::class, 'create'])->name('cost.create');
     Route::get('/cost', [CostController::class, 'index'])->name('cost.index');
     
     Route::get('/sale/{sale}', [SaleController::class, 'edit'])->name('sale.show');
-    Route::post('/sale/{sale}', [SaleController::class, 'edit'])->name('sale.edit');
-    Route::patch('/sale/{sale}', [SaleController::class, 'update'])->name('sale.update');
-    Route::delete('/sale/{sale}', [SaleController::class, 'destroy'])->name('sale.destroy');
+    Route::post('/sale/{sale}', [SaleController::class, 'update'])->name('sale.update');
+    Route::delete('/sale/{sale}', [SaleController::class, 'delete'])->name('sale.delete');
     Route::post('/sale', [SaleController::class, 'create'])->name('sale.create');
     Route::get('/sale', [SaleController::class, 'index'])->name('sale.index');
     
     Route::get('/production/{production}', [ProductionController::class, 'edit'])->name('production.show');
-    Route::post('/production/{production}', [ProductionController::class, 'edit'])->name('production.edit');
-    Route::patch('/production/{production}', [ProductionController::class, 'update'])->name('production.update');
-    Route::delete('/production/{production}', [ProductionController::class, 'destroy'])->name('production.destroy');
+    Route::post('/production/{production}', [ProductionController::class, 'update'])->name('production.update');
+    Route::delete('/production/{production}', [ProductionController::class, 'delete'])->name('production.delete');
     Route::post('/production', [ProductionController::class, 'create'])->name('production.create');
     Route::get('/production', [ProductionController::class, 'index'])->name('production.index');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::delete('/profile', [ProfileController::class, 'delete'])->name('profile.delete');
 });
 
 require __DIR__.'/auth.php';

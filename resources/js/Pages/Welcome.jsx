@@ -76,9 +76,9 @@ export default function Welcome({ auth }) {
                             </div>
                         </div>)}
                     </div>
-
-                    <Creator></Creator>
                 </div>
+
+                <Creator className='bottom-3'></Creator>
             </div>
 
             <style>{`
