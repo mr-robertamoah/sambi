@@ -4,19 +4,51 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
+import FileInput from '@/Components/FileInput';
+import { useState } from 'react';
+import Image from '@/Components/Image';
+import ProfilePicture from '@/Components/ProfilePicture';
 
 export default function UpdateProfileInformation({ mustVerifyEmail, status, className = '' }) {
-    const user = usePage().props.auth.user;
+    const user = usePage().props.auth.user?.data;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
+    const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
         name: user.name,
         email: user.email,
+        image: user.image,
+        image_id: user.image?.id,
     });
+
+    let newData = {
+        src: user.image?.src,
+        name: user.image?.name,
+        file: null
+    }
+    let [image, setImage] = useState(newData)
+
+    function updateImage(image) {
+        if (data.image_id) data.image_id = null
+        setImage((prev) => {
+            let data = {...prev}
+            data.src = null
+            if (image)
+                data.src = URL.createObjectURL(image),
+            data.name = image?.name,
+            data.file = image
+            return data
+        })
+
+        setData("image", image)
+    }
 
     const submit = (e) => {
         e.preventDefault();
 
-        patch(route('profile.update'));
+        post(route('profile.update'), {
+            onStart: () => {
+                // setImage(newData)
+            }
+        });
     };
 
     return (
@@ -29,7 +61,7 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                 </p>
             </header>
 
-            <form onSubmit={submit} className="mt-6 space-y-6">
+            <form onSubmit={submit} className="mt-6 space-y-6" encType="multipart//form-data">
                 <div>
                     <InputLabel htmlFor="name" value="Name" />
 
@@ -38,7 +70,6 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                         className="mt-1 block w-full"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
-                        required
                         isFocused
                         autoComplete="name"
                     />
@@ -55,11 +86,30 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                         className="mt-1 block w-full"
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        required
                         autoComplete="username"
                     />
 
                     <InputError className="mt-2" message={errors.email} />
+                </div>
+
+                <div>
+                    <FileInput 
+                        id="image"
+                        name="image"
+                        className="flex justify-end"
+                        defaultFilename={data.image?.name ?? "no image"}
+                        defaultButtonText="upload profile image"
+                        src={image.src}
+                        onChange={(e) => {
+                            updateImage(e.target.files.length ? e.target.files[0] : null)
+                        }}
+                        onDelete={(e) => {
+                            updateImage(null)
+                        }}
+                        getFileOnDelete={false}
+                    ></FileInput>
+
+                    <InputError message={errors.image} className="mt-2" />
                 </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (

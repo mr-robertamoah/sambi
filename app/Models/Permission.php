@@ -11,7 +11,7 @@ class Permission extends Model
     use HasFactory;
     use HasActivityItemableTrait;
 
-    protected $fillable = ["date", "number_of_units", "product_id"];
+    protected $fillable = ["name", "description"];
 
     public function user()
     {
@@ -20,8 +20,10 @@ class Permission extends Model
 
     public function assignedUsers()
     {
-        return $this->belongsToMany(User::class, "permission_user", "permission_id")
-            ->withTimestamps();
+        return $this->belongsToMany(User::class, "permission_user", "permission_id", "assignee_id")
+            ->withTimestamps()
+            ->withPivot(["assigner_id"])
+            ->withPivot(["id"]);
     }
 
     public function scopeWherePermissionName($query, string $name)
@@ -42,6 +44,15 @@ class Permission extends Model
     {
         return $query->where(function ($query) use ($names) {
             $query->whereIn("name", $names);
+        });
+    }
+
+    public function scopeWhereNotAssignedTo($query, string|int|null $userId)
+    {
+        return $query->where(function ($query) use ($userId) {
+            $query->whereDoesntHave("assignedUsers", function($query) use ($userId) {
+                $query->where("users.id", $userId);
+            });
         });
     }
 }

@@ -5,6 +5,7 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 import notCurrentRoute from '@/Helpers/notCurrentRoute';
+import ProfilePicture from '@/Components/ProfilePicture';
 
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
@@ -37,7 +38,14 @@ export default function Authenticated({ user, header, children }) {
                                                 type="button"
                                                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                                             >
-                                                {user.name}
+                                                <ProfilePicture 
+                                                    showDefaultText={false}
+                                                    size={10}
+                                                    name={user.name}
+                                                    src={user.image?.src}
+                                                    className='mr-2 h-10 w-10'
+                                                ></ProfilePicture>
+                                                    {user.name}
 
                                                 <svg
                                                     className="ml-2 -mr-0.5 h-4 w-4"

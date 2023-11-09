@@ -21,9 +21,9 @@ export default function Login({ status, canResetPassword }) {
         };
     }, []);
 
-    const submit = (e) => {
+    const submit = async (e) => {
         e.preventDefault();
-
+        await axios.get("/sanctum/csrf-cookie")
         post(route('login'));
     };
 
@@ -89,6 +89,12 @@ export default function Login({ status, canResetPassword }) {
                             </Link>
                         )}
 
+                        <Link
+                            href={route('register')}
+                            className="ml-2 underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            Register
+                        </Link>
                         <PrimaryButton className="ml-4" disabled={processing}>
                             Log in
                         </PrimaryButton>
@@ -96,7 +102,7 @@ export default function Login({ status, canResetPassword }) {
                 </form>
             </GuestLayout>
 
-            <Creator className='bottom-3'></Creator>
+            <Creator className='absolute bottom-3'></Creator>
         </>
     );
 }

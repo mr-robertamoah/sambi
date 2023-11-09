@@ -63,7 +63,8 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Permission::class, "permission_user", "assignee_id")
             ->withTimestamps()
-            ->withPivot("assigner_id");
+            ->withPivot(["assigner_id"])
+            ->withPivot(["id"]);
     }
 
     public function suggestions()
@@ -81,6 +82,11 @@ class User extends Authenticatable
         return $this->hasMany(Product::class);
     }
 
+    public function addedCategories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
     public function addedPermissions()
     {
         return $this->hasMany(Permission::class);
@@ -96,5 +102,15 @@ class User extends Authenticatable
         if ($names) $query->wherePermissionNames($names);
         
         return $query->exists();
+    }
+
+    public function addedProduct($product)
+    {
+        return $product->user->is($this);
+    }
+
+    public function addedCategory($category)
+    {
+        return $category->user->is($this);
     }
 }

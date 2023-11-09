@@ -9,6 +9,7 @@ enum PermissionEnum: string
     use EnumTrait;
     
     case CAN_MANAGE_USER = "can manage user";
+    case CAN_VIEW_USER = "can view user";
     case CAN_MANAGE_CATEGORY = "can manage category";
     case CAN_MANAGE_COST = "can manage cost";
     case CAN_MAKE_COST_ENTRY = "can make cost entry";

@@ -116,7 +116,7 @@ export default function Register() {
                 </form>
             </GuestLayout>
 
-            <Creator className='bottom-3'></Creator>
+            <Creator className='absolute bottom-3'></Creator>
         </>
     );
 }

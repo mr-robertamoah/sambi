@@ -39,7 +39,7 @@ class ProductService extends BaseService
 
         if ($hasFile)
             SaveFileAction::make()->execute(
-                fileDTO: $fileDTO, attach: true, fileable: $product
+                fileDTO: $fileDTO, fileable: $product
             );
 
         return $product;
@@ -60,7 +60,7 @@ class ProductService extends BaseService
         EnsureUserCanUpdateProductAction::make()->execute($productDTO);
 
         if (HasFileAction::make()->execute($productDTO, "uploadedFile")) {
-            DeleteFileAction::make()->execute(fileable: $productDTO->product, type: "first");
+            DeleteFileAction::make()->execute(fileable: $productDTO->product);
 
             $fileDTO = FileDTO::new()->fromArray(
                 StoreFileAction::make()->execute(
@@ -69,7 +69,7 @@ class ProductService extends BaseService
             );
 
             SaveFileAction::make()->execute(
-                fileDTO: $fileDTO, attach: true, fileable: $productDTO->product
+                fileDTO: $fileDTO, fileable: $productDTO->product
             );
         } 
 

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\DTOs\UserDTO;
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\UserService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,14 +31,16 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
+        UserService::new()->updateUser(
+            UserDTO::new()->fromArray([
+                "user" => $request->user(),
+                "name" => $request->name,
+                "email" => $request->email,
+                "deleteImage" => $request->image_id ? false : true,
+                "image" => $request->hasFile("image") ? $request->file("image") : null,
+            ])
+        );
+        
         return Redirect::route('profile.edit');
     }
 

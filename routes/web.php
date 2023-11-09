@@ -66,7 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/permission', [PermissionController::class, 'create'])->name('permission.create');
     Route::get('/permission', [PermissionController::class, 'index'])->name('permission.index');
     
-    Route::post('/user/{user}', [UserController::class, 'update'])->name('user.update');
+    Route::post('/user/{user}/permissions', [PermissionController::class, 'syncPermissions'])->name('user.permissions.update');
     Route::delete('/user/{user}', [UserController::class, 'delete'])->name('user.delete');
     Route::get('/user', [UserController::class, 'index'])->name('user.index');
     
@@ -89,7 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/production', [ProductionController::class, 'index'])->name('production.index');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'delete'])->name('profile.delete');
 });
 

@@ -9,7 +9,6 @@ class SaveFileAction extends Action
 {
     public function execute(
         FileDTO $fileDTO, 
-        bool $attach = false,
         ?Model $fileable = null,
         string $fileableType = "product",
     ) {
@@ -22,7 +21,7 @@ class SaveFileAction extends Action
             "filename" => $fileDTO->filename
         ]);
 
-        if ($attach && $fileable) {
+        if ($fileable) {
             $fileableType .= "Files";
             $file->$fileableType()->attach($fileable);
         }

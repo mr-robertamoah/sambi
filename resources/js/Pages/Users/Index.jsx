@@ -1,38 +1,60 @@
 import Alert from '@/Components/Alert';
 import Creator from '@/Components/Creator';
 import DeleteButton from '@/Components/DeleteButton';
-import FileInput from '@/Components/FileInput';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
 import Paginator from '@/Components/Paginator';
 import PrimaryButton from '@/Components/PrimaryButton';
-import ProductCard from '@/Components/ProductCard';
-import TextBox from '@/Components/TextBox';
-import TextInput from '@/Components/TextInput';
+import UserCard from '@/Components/UserCard';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import can from '@/Helpers/can';
+import PermissionBadge from '@/Components/PermissionBadge';
+import ProfilePicture from '@/Components/ProfilePicture';
+import Back from '@/Icons/Back';
 
 export default function Index({ auth, users }) {
 
     let [openModal, setOpenModal] = useState(false)
+    let [processing, setProcessing] = useState()
     let [success, setSuccess] = useState()
+    let [searching, setSearching] = useState(false)
+    let [permissions, setPermissions] = useState([])
+    let [existingPermissions, setExistingPermissions] = useState([])
+    let [removedPermissions, setRemovedPermissions] = useState([])
+    let [addedPermissions, setAddedPermissions] = useState([])
+    let [canAssign, setCanAssign] = useState(false)
+    let [errors, setErrors] = useState({
+        failed: null,
+        search: null,
+    })
     let [action, setAction] = useState("delete")
     let newData = {
         id: '',
-        permissionIds: [],
+        name: '',
+        email: '',
     }
     let [modalData, setModalData] = useState(newData);
 
+    useEffect(() => {
+        setCanAssign(can(auth.user?.data, "assign", "permissions"))
+    }, [])
+
+    useEffect(() => {
+        setExistingPermissions(()=>{
+            let u = users.data.find(u => u.id == modalData.id)
+
+            return u?.permissions ? [...u.permissions] : []
+        })
+    }, [users.data, modalData.id])
+
     useEffect(function () {
         if (!openModal) {
-            reset()
             setModalData(newData)
         }
 
         if (success && openModal) setSuccess(null)
-        if (errors.failed && openModal) errors.failed = null
+        if (errors.failed && openModal) setErrors({failed: null})
         
     }, [openModal])
 
@@ -40,14 +62,30 @@ export default function Index({ auth, users }) {
         setOpenModal(!openModal)
     }
 
-    function removeUser(user) {
-        setAction("delete")
+    function viewUser(user) {
+        setAction("view")
+        debounceSearch(user.id)
+        setPermissions([])
+        setAddedPermissions([])
+        setRemovedPermissions([])
+        setExistingPermissions([...user.permissions])
+        setUser(user)
+        setOpenModal(true)
+    }
+
+    function setUser(user) {
         setModalData((prev) => {
             return {
                 id: user.id, 
                 name: user.name,
+                email: user.email,
             }
         })
+    }
+
+    function removeUser(user) {
+        setAction("delete")
+        setUser(user)
         setOpenModal(true)
     }
 
@@ -55,167 +93,239 @@ export default function Index({ auth, users }) {
         event.preventDefault()
     }
 
-    function updateModelData(value) {
-        setModalData((prev) => {
-            let d = {...prev}
-            d["permissionIds"] = [...prev["permissionIds"], value]
-            return d
-        })
-    }
-
     function syncPermissions() {
-        post(route("product.update", modalData.id), {
-            onSuccess: (e) => {
-                reset()
-                setSuccess(`${modalData.name} product has been successfully updated.`)
-            }
+        setProcessing(true)
+        router.post(route("user.permissions.update", auth.user.data.id), 
+        {
+            "permission_ids": [
+                ...addedPermissions.map(perm => perm.id),
+                ...removedPermissions.map(perm => perm.id),
+            ],
+            "assignee_id": modalData.id
+        },{
+        onSuccess: (data) => {
+            console.log(data, "sync")
+            let perms = [...addedPermissions, ...existingPermissions]
+            setSuccess(`now, ${modalData.name}, ${perms.map(perm => perm.name).join("; ")}.`)
+        },
+        onError: (e) => {
+            console.error(e, "sync")
+            setErrors(() => {
+                return {failed: e.response.data.message}
+            })
+        },
+        onFinish: () => {
+            setProcessing(false)
+            setAddedPermissions([])
+            setRemovedPermissions([])
+            // setTimeout(() => {
+            //     setOpenModal(false)
+            // }, 400)
+        }})
+    }
+
+    function deleteUser() {
+        setProcessing(true)
+        router.delete(route("user.delete", modalData.id), {
+            onSuccess: () => {
+                setProcessing(false)
+                setSuccess(`${modalData.name} user has been successfully deleted.`)
+                setModalData(newData)
+            },
+            onError: (e) => {
+                console.error(e, "delete")
+                setErrors(() => {
+                    return {failed: e.failed}
+                })
+            },
+            onFinish: () => setProcessing(false)
         })
     }
 
-    function deleteProduct() {
-        router.delete(route("product.delete", modalData.id), {
-            onSuccess: (e) => {
-                setModalData(newData)
-                setSuccess(`${modalData.name} product has been successfully deleted.`)
+    let debounceSearch = useMemo((id) => _.debounce(() => getPermissions(id), 200), [])
+
+    function getPermissions(id) {
+        setSearching(true)
+        axios.get(route("permissions.get") + `?assignee_id=${id}`)
+        .then((res) => {
+                setPermissions(res.data ? res.data.permissions.data : [])
+                setProcessing(false)
+            })
+        .catch((e) => {
+                console.error(e, "getPermissions")
+                setErrors(() => {
+                    return {failed: e.response.data.message}
+                })
             }
+        )
+        .finally(() => {
+            setSearching(false)
         })
     }
 
     return (
         <AuthenticatedLayout
             user={auth.user?.data}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Products</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Users</h2>}
         >
-            <Head title="Products" />
+            <Head title="Users" />
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
-                <div className="text-sm text-gray-600">{products.meta.total} product{products.meta.total == 1 ? "" : "s"}</div>
-                <PrimaryButton onClick={newProduct}>new</PrimaryButton>
+                <div className="text-sm text-gray-600">{users.meta?.total} other user{users.meta?.total == 1 ? "" : "s"}</div>
             </div>
 
-            <div className={`px-6 py-12 gap-6 flex-wrap ${products.meta.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
-                {products.meta.total ? products.data.map((product) =>(<ProductCard
-                    key={product.id}
-                    product={product}
-                    onDblClick={(e) => editProduct(product)}
-                    onDelete={(e) => removeProduct(product)}
-                ></ProductCard>)) : <div>no products have been added</div>}
+            <div className={`px-6 py-12 gap-6 flex-wrap ${users.meta?.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
+                {users.meta?.total ? users.data.map((user) =>(<UserCard
+                    key={user.id}
+                    user={user}
+                    title={`double click to view ${user.name} user`}
+                    onDblClick={(e) => viewUser(user)}
+                    onDelete={can(auth.user?.data, "delete", "users") ? (e) => removeUser(user) : null}
+                ></UserCard>)) : <div className="w-full h-1/4 flex items-center justify-center text-sm text-gray-600">no other user apart from you</div>}
                 
             </div>
 
-            {products.meta.total > 10 && (<Paginator
+            {users.meta?.total > 10 && (<Paginator
                 className="my-12"
-                disablePrevious={!products.links.prev}
-                disableNext={!products.links.next}
-                onClickPrevious={(e) => router.get(products.links.prev ?? "")}
-                onClickNext={(e) => router.get(products.links.next ?? "")}
+                disablePrevious={!users.links.prev}
+                disableNext={!users.links.next}
+                onClickPrevious={(e) => router.get(users.links.prev ?? "")}
+                onClickNext={(e) => router.get(users.links.next ?? "")}
             ></Paginator>)}
 
-            <Creator className="mt-3"></Creator>
+            <Creator className="mt-3 absolute bottom-0"></Creator>
 
             <Modal
                 show={openModal}
                 onClose={toggleProductModal}
             >
-                <Alert
-                    show={errors.failed || success}
-                    type={success ? "success" : "failed"}
-                    onDisappear={() => {
-                        // if (success) setSuccess()
-                        // if (errors.failed) errors.failed = null
-                        if (action == "delete" && !modalData.id) setOpenModal(false)
-                    }}
-                >{success ?? errors.failed}</Alert>
-                {processing && (<div className={`w-full text-center flex rounded-full mt-4 mb-2 justify-center items-center ${action != "delete" ? "text-green-600" : "text-red-600"}`}>
-                    <div className={`mr-2 animate-ping w-3 h-3 ${action != "delete" ? "bg-green-400" : "bg-red-400"}`}></div> {action == "create" ? "creating" : action == "edit" ? "editing" : "deleting"}...
-                </div>)}
-                <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 uppercase">{action} Product</div>
-                {action != "delete" && (<form encType="multipart/form-data" className="mx-auto p-2 max-w-md" onSubmit={submit}>
-                    <div>
-                        <InputLabel htmlFor="name" value="Name" />
-
-                        <TextInput
-                            id="name"
-                            type="text"
-                            name="name"
-                            value={modalData.name}
-                            className="mt-1 block w-full"
-                            isFocused={true}
-                            onChange={(e) => updateModelData('name', e.target.value)}
-                        />
-
-                        <InputError message={errors.name} className="mt-2" />
-                    </div>
-
-                    <div className="mt-4">
-                        <InputLabel htmlFor="description" value="Description" />
-
-                        <TextBox
-                            id="description"
-                            name="description"
-                            value={modalData.description}
-                            className="mt-1 block w-full"
-                            onChange={(e) => updateModelData('description', e.target.value)}
-                        />
-
-                        <InputError message={errors.description} className="mt-2" />
-                    </div>
+                <div className="overflow-y-auto">
+                    <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 uppercase">user</div>
                     
-                    <div className="mt-4">
-                        <InputLabel htmlFor="selling_price" value="Selling Price" />
-
-                        <TextInput
-                            id="selling_price"
-                            name="selling_price"
-                            type="text"
-                            value={modalData.sellingPrice}
-                            className="mt-1 block w-full"
-                            placeholder="0.00"
-                            onChange={(e) => {
-                                updateModelData('sellingPrice', e.target.value)
+                    <div className="mt-4 w-full">
+                        <Alert
+                            show={errors.failed || success}
+                            type={success ? "success" : "failed"}
+                            onDisappear={() => {
+                                if (errors.failed) setErrors({failed: null})
+                                if (action == "delete" && !modalData.id) setOpenModal(false)
                             }}
-                        />
-
-                        <InputError message={errors.selling_price} className="mt-2" />
+                        >{success ?? errors.failed}</Alert>
+                        {(processing || searching) && (<div className={`w-full text-center flex rounded-full mt-4 mb-2 justify-center items-center ${action != "delete" ? "text-green-600" : "text-red-600"}`}>
+                            <div className={`mr-2 animate-ping w-3 h-3 ${action != "delete" ? "bg-green-400" : "bg-red-400"}`}></div> {searching ? "searching" : action == "delete" ? "deleting" : "updating"}...
+                        </div>)}
                     </div>
-
-                    <div className="block mt-4">
-                        <FileInput 
-                            id="file"
-                            name="file"
-                            defaultFilename={modalData.filename ?? "no image"}
-                            defaultButtonText="upload image"
-                            src={modalData.src}
-                            onChange={(e) => {
-                                updateModelData('file', e.target.files.length ? e.target.files[0] : null)
-                            }}
-                            onDelete={(e) => {
-                                updateModelData('file', null)
-                            }}
-                            getFileOnDelete={action == "edit" ? true : false}
-                        ></FileInput>
-
-                        <InputError message={errors.file} className="mt-2" />
-                    </div>
-
-                    <div className="flex items-center justify-end mt-4">
-                        
-                        <PrimaryButton className="ml-4 mb-4" 
-                            disabled={processing || (action == "edit" && !(!!data.description || !!data.name || !!data.file || !!data.selling_price))}
-                        >
-                            {action}
-                        </PrimaryButton>
-                    </div>
-                </form>)}
-                {action == "delete" && (
-                    <div className="mx-auto w-4/5 text-center mb-3">
-                        <div className="text-gray-600">Are you sure you want to delete <span className="capitalize font-semibold">{modalData.name}</span> product</div>
-                        <div className="flex justify-between items-center mt-3">
-                            <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deleteProduct}>delete</DeleteButton>
+                    {action != "delete" && (<div className="flex justify-start items-center overflow-x-auto px-5 relative">
+                        <div className="mt-4 flex justify-end max-w-[60%] items-center mx-4 shrink-0 bg-gray-50 p-2 rounded w-full">
+                            {canAssign && <Back
+                                onClick={()=> setOpenModal(false)}
+                                title="go back"
+                                className="cursor-pointer text-gray-600 font-semibold absolute top-0 bg-gray-200 p-2 rounded-full"></Back>}
+                            <div className="mx-5 w-full text-center">
+                                <div className="text-sm text-gray-600">
+                                    <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 capitalize">{modalData.name}</div>
+                                    <div className="mb-2 font-semibold">{modalData.email}</div>
+                                </div>
+                                <div className="flex justify-center">
+                                    <ProfilePicture
+                                        size={48}
+                                        name={modalData.name}
+                                        src={modalData.src}
+                                        className='mr-2 h-48 w-48'
+                                        rounded={false}
+                                    ></ProfilePicture>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                )}
+
+                        <form encType="multipart/form-data" className="mx-auto p-2 min-w-md shrink-0" onSubmit={submit}>
+                        {canAssign && (
+                        <>
+                            <div className="mt-4 bg-gray-50 p-2 mb-2 text-sm text-gray-600 text-center rounded">
+                                <div className="">assignable permissions</div>
+                                <div className="my-2 flex w-full max-w-md overflow-y-auto">
+                                    {permissions.length ? permissions.map((permission) => 
+                                        <PermissionBadge
+                                            onDblClick={(perm) => {
+                                                if (addedPermissions.find(value => value.id == perm.id)) return
+                                                if (existingPermissions.find(value => value.id == perm.id)) return
+                                                if (removedPermissions.find(value => value.id == perm.id)) return
+                                                setAddedPermissions((ap) => [...ap, perm])
+                                            }}
+                                            title={`double click on permission to add to user`}
+                                            className='m-2 shrink-0' key={permission.id} permission={permission}></PermissionBadge>
+                                    ) : <div className="min-h-[50px] flex justify-center items-center w-full">getting permissions...</div>}
+                                </div>
+                            </div>
+
+                            <div className="mt-4 bg-gray-50 p-2 mb-2 text-sm text-gray-600 text-center rounded">
+                                <div className="">existing permissions</div>
+                                <div className="my-2 flex w-full max-w-md flex-wrap">
+                                    {existingPermissions.length ? existingPermissions.map((permission) => 
+                                        <PermissionBadge 
+                                            onClose={(perm) => {
+                                                setExistingPermissions((ep) => ep.filter(value => value.id != perm.id))
+                                                setRemovedPermissions((rp) => [...rp, perm])
+                                            }}
+                                            className='m-2' key={permission.id} permission={permission}></PermissionBadge>
+                                    ) : <div className="p-4 flex justify-center items-center w-full">no existing permissions</div>}
+                                </div>
+                            </div>
+
+                            <div className="mt-4 bg-gray-50 p-2 mb-2 text-sm text-gray-600 text-center rounded">
+                                <div className="">removed permissions</div>
+                                <div className="my-2 flex w-full max-w-md flex-wrap">
+                                    {removedPermissions.length ? removedPermissions.map((permission) => 
+                                        <PermissionBadge
+                                            onAdd={(perm) => {
+                                                setRemovedPermissions((rp) => rp.filter(value => value.id != perm.id))
+                                                setExistingPermissions((ep) => [...ep, perm])
+                                            }}
+                                            className='m-2' key={permission.id} permission={permission}></PermissionBadge>
+                                    ) : <div className="p-4 flex justify-center items-center w-full">no removed permissions</div>}
+                                </div>
+                            </div>
+
+                            <div className="mt-4 bg-gray-50 p-2 mb-2 text-sm text-gray-600 text-center rounded">
+                                <div className="">added permissions</div>
+                                <div className="my-2 flex w-full max-w-md flex-wrap">
+                                    {addedPermissions.length ? addedPermissions.map((permission) => 
+                                        <PermissionBadge
+                                            onClose={(perm) => {
+                                                setAddedPermissions((ap) => ap.filter(value => value.id != perm.id))
+                                            }}
+                                            className='m-2' key={permission.id} permission={permission}></PermissionBadge>
+                                    ) : <div className="p-4 flex justify-center items-center w-full">no added permissions</div>}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-end mt-4">
+                                
+                                <PrimaryButton className="ml-4 mb-4" 
+                                    disabled={processing || !(!!addedPermissions.length || !!removedPermissions.length)}
+                                    onClick={syncPermissions}
+                                >
+                                    assign permissions
+                                </PrimaryButton>
+                            </div>
+                        </>)}
+                        </form>
+                    </div>)}
+                    {action == "delete" && (
+                        <div className="mx-auto w-4/5 text-center mb-3">
+                            <div className="text-gray-600">Are you sure you want to delete account belonging to <span className="capitalize font-semibold">{modalData.name}</span></div>
+                            <p className="text-sm text-red-400 my-2">Once the account is deleted, all of its resources and data will be permanently deleted.</p>
+                            <div className="flex justify-between items-center mt-3">
+                                <PrimaryButton 
+                                    disabled={processing}
+                                    onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                                <DeleteButton 
+                                    disabled={processing}
+                                    onClick={deleteUser}>delete</DeleteButton>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </Modal>
         </AuthenticatedLayout>
     );

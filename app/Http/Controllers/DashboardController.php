@@ -66,6 +66,7 @@ class DashboardController extends Controller
                 names: [
                     PermissionEnum::CAN_MANAGE_ALL->value,
                     PermissionEnum::CAN_MANAGE_USER->value,
+                    PermissionEnum::CAN_VIEW_USER->value,
                     PermissionEnum::CAN_ASSIGN_PERMISSION->value
                 ],
             ) ? User::query()->whereNot("id", $user->id)->count() : null,

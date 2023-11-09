@@ -12,7 +12,6 @@ class EnsureUserCanCreateProductAction extends Action
     {
         if (
             $productDTO->user->isPermittedTo(names: [
-                PermissionEnum::CAN_CREATE_PRODUCT->value,
                 PermissionEnum::CAN_MANAGE_ALL->value,
                 PermissionEnum::CAN_MANAGE_PRODUCT->value,
             ])

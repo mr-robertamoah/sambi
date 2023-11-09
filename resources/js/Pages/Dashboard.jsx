@@ -6,6 +6,7 @@ import { Head } from '@inertiajs/react';
 export default function Dashboard({ auth, products, categories, users, costItems, permissions, stats, production, sales, costs }) {
     
     return (
+        <>
         <AuthenticatedLayout
             user={auth.user?.data}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>}
@@ -104,8 +105,9 @@ export default function Dashboard({ auth, products, categories, users, costItems
                     </ul>
                 </DashboardCard>}
             </div>
-
-            <Creator className="mb-6 mt-2"></Creator>
         </AuthenticatedLayout>
+
+        <Creator className="mb-6 mt-2"></Creator>
+        </>
     );
 }

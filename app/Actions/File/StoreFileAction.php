@@ -3,7 +3,6 @@
 namespace App\Actions\File;
 
 use App\Actions\Action;
-use App\DTOs\ProductDTO;
 use App\Exceptions\FileException;
 use Exception;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +12,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class StoreFileAction extends Action
 {
     public function execute(
-        ProductDTO $dto, 
+        BaseDTO $dto, 
         string $disk = "public", 
         string $file = "file", 
         string $filePath = "path",
@@ -38,10 +37,10 @@ class StoreFileAction extends Action
             $dto->$filePath : "";
 
         try {
-            $dto->uploadedFile->move(Storage::disk($disk)->path($data["path"]), $data["filename"]);
+            $dto->$file->move(Storage::disk($disk)->path($data["path"]), $data["filename"]);
             return $data;
         } catch (Exception $e) {
-
+            ds($e);
             throw new FileException("Sorry! Failed to upload file with " . $data["name"] . " name.", 422);
         }
     }

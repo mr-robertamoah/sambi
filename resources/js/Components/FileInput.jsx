@@ -48,7 +48,7 @@ export default forwardRef(function FileInput({ src = null, defaultButtonText = "
 
             {src && (<div className="block mt-4 w-1/2 mx-auto text-center bg-gray-400 max-h-40 relative">
                 <Image
-                    className="h-40 object-contain"
+                    className="h-40 object-contain w-full"
                     src={src}
                     alt={defaultFilename}
                 ></Image>

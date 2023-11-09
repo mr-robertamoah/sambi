@@ -20,4 +20,9 @@ class File extends Model
     {
         return $this->morphedByMany(Product::class,"fileable", "fileables");
     }
+
+    public function userFiles()
+    {
+        return $this->morphedByMany(User::class,"fileable", "fileables");
+    }
 }

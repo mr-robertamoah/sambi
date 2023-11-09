@@ -34,7 +34,6 @@ class PermissionService extends BaseService
 
     public function updatePermission(PermissionDTO $permissionDTO)
     {
-
         EnsureUserExistsAction::make()->execute($permissionDTO);
 
         $permissionDTO = $permissionDTO->withPermission(
@@ -73,14 +72,14 @@ class PermissionService extends BaseService
     {
         EnsureUserExistsAction::make()->execute($permissionDTO);
         
-        EnsureValidGetDataAction::make()->execute($permissionDTO);
+        // EnsureValidGetDataAction::make()->execute($permissionDTO);
 
         return GetPermissionsAction::make()->execute($permissionDTO);
     }
     
     public function syncPermissionsAndUser(PermissionDTO $permissionDTO)
     {
-        EnsureUserExistsAction::make()->execute($permissionDTO);
+        EnsureUserExistsAction::make()->execute($permissionDTO, "assignee");
 
         EnsurePermissionsWhereGivenAction::make()->execute($permissionDTO);
 

@@ -2,7 +2,6 @@ import Alert from '@/Components/Alert';
 import Creator from '@/Components/Creator';
 import DeleteButton from '@/Components/DeleteButton';
 import FileInput from '@/Components/FileInput';
-import Image from '@/Components/Image';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
@@ -170,12 +169,12 @@ export default function Index({ auth, products }) {
             <Head title="Products" />
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
-                <div className="text-sm text-gray-600">{products.meta.total} product{products.meta.total == 1 ? "" : "s"}</div>
+                <div className="text-sm text-gray-600">{products.meta?.total} product{products.meta?.total == 1 ? "" : "s"}</div>
                 <PrimaryButton onClick={newProduct}>new</PrimaryButton>
             </div>
 
-            <div className={`px-6 py-12 gap-6 flex-wrap ${products.meta.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
-                {products.meta.total ? products.data.map((product) =>(<ProductCard
+            <div className={`px-6 py-12 gap-6 flex-wrap ${products.meta?.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
+                {products.meta?.total ? products.data.map((product) =>(<ProductCard
                     key={product.id}
                     product={product}
                     onDblClick={(e) => editProduct(product)}
@@ -184,7 +183,7 @@ export default function Index({ auth, products }) {
                 
             </div>
 
-            {products.meta.total > 10 && (<Paginator
+            {products.meta?.total > 10 && (<Paginator
                 className="my-12"
                 disablePrevious={!products.links.prev}
                 disableNext={!products.links.next}

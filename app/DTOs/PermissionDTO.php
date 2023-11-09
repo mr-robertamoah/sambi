@@ -17,6 +17,13 @@ class PermissionDTO extends BaseDTO
     public ?string $description = null;
     public ?string $permissionId = null;
     public array $permissionIds = [];
+    public int|string|null $page = null;
+    public int|string|null $assigneeId = null;
+
+    public function isForNextPage() : bool
+    {
+        return !is_null($this->page);
+    }
     
     /**
      * assign data (filled or validated) to the dto properties as an 

@@ -77,9 +77,9 @@ export default function Welcome({ auth }) {
                         </div>)}
                     </div>
                 </div>
-
-                <Creator className='bottom-3'></Creator>
             </div>
+
+                <Creator className='absolute bottom-3'></Creator>
 
             <style>{`
                 .bg-dots-darker {
