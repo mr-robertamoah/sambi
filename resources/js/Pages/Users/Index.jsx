@@ -174,7 +174,7 @@ export default function Index({ auth, users }) {
                 <div className="text-sm text-gray-600">{users.meta?.total} other user{users.meta?.total == 1 ? "" : "s"}</div>
             </div>
 
-            <div className={`px-6 py-12 gap-6 flex-wrap ${users.meta?.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
+            <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${users.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
                 {users.meta?.total ? users.data.map((user) =>(<UserCard
                     key={user.id}
                     user={user}

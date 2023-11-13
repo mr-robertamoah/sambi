@@ -54,6 +54,7 @@ class ProductController extends Controller
                     "productId" => $request->product,
                     "description" => $request->description,
                     "sellingPrice" => $request->selling_price,
+                    "deleteFile" => $request->file_id ? true : false,
                     "uploadedFile" => $request->hasFile("file") ? $request->file("file") : null,
                 ])
             );

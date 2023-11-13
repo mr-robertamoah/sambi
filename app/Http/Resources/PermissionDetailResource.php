@@ -16,7 +16,7 @@ class PermissionDetailResource extends JsonResource
     {
         return [
             "id"=> $this->id,
-            "assignedUsers"=> AssignedUserResource::collection($this->assignedUsers),
+            "assignedUsers"=> AssignedUserResource::collection($this->assignedUsers()->latest()->get()),
         ];
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\CostItemController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
@@ -47,6 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/category/{category}', [CategoryController::class, 'delete'])->name('category.delete');
     Route::post('/category', [CategoryController::class, 'create'])->name('category.create');
     Route::get('/category', [CategoryController::class, 'index'])->name('category.index');
+    
+    Route::post('/discount/{discount}', [DiscountController::class, 'update'])->name('discount.update');
+    Route::delete('/discount/{discount}', [DiscountController::class, 'delete'])->name('discount.delete');
+    Route::post('/discount', [DiscountController::class, 'create'])->name('discount.create');
+    Route::get('/discount', [DiscountController::class, 'index'])->name('discount.index');
     
     Route::get('/product/{product}', [ProductController::class, 'edit'])->name('product.show');
     Route::post('/product/{product}', [ProductController::class, 'update'])->name('product.update');

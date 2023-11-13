@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('files', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class);
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->string("path");
             $table->enum("disk", ["local", "public"])->default("public");
             $table->integer("size");
@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string("name");
             $table->string("mime");
             $table->text("description")->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

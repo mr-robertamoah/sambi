@@ -4,11 +4,12 @@ namespace App\Actions\Category;
 
 use App\Actions\Action;
 use App\DTOs\CategoryDTO;
+use App\DTOs\CostItemDTO;
 use App\Exceptions\CategoryException;
 
-class EnsurecategoryExistsAction extends Action
+class EnsureCategoryExistsAction extends Action
 {
-    public function execute(CategoryDTO $categoryDTO)
+    public function execute(CategoryDTO|CostItemDTO $categoryDTO)
     {
         if ($categoryDTO->category) return;
 

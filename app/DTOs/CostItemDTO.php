@@ -2,12 +2,21 @@
 
 namespace App\DTOs;
 
+use App\Models\CostItem;
+use App\Models\User;
 use Illuminate\Http\Request;
 use MrRobertAmoah\DTO\BaseDTO;
 
 class CostItemDTO extends BaseDTO
 {
-    //set properties that correspond with request inputs
+    public ?User $user = null;
+    public ?CostItem $costItem = null;
+    public string|int|null $costItemId = null;
+    public string|int|null $categoryId = null;
+    public string|null $name = null;
+    public string|null $description = null;
+    public string|null $unit = null;
+    public string|null $unitCharge = null;
     
     /**
      * assign data (filled or validated) to the dto properties as an 
@@ -32,15 +41,4 @@ class CostItemDTO extends BaseDTO
     {
         return $this;
     }
-
-    /**
-    * uncomment and use this function if you want to 
-    * customize the key and value pairs
-    * to be used to create your dto and still get the 
-    * other features of the dto
-    */
-//    public function requestToArray($request)
-//    {
-//       return [];
-//    }
 }

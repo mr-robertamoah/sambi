@@ -19,6 +19,10 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->wantsJson()) return response()->json([
+            "categories" => $request->no_permissions ? CategoryResource::collection(Category::all()) : []
+        ]);
+
         return Inertia::render('Categories/Index', [
             "categories" => $request->user()?->isPermittedTo(names: [
                 PermissionEnum::CAN_MANAGE_ALL->value,

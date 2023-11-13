@@ -17,4 +17,9 @@ trait HasFileableTrait
     {
         return $this->files()->first();
     }
+
+    public function hasFile()
+    {
+        return $this->files()->count() > 0;
+    }
 }

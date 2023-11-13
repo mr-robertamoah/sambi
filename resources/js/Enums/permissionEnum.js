@@ -8,6 +8,8 @@ const permissionEnum =
     CAN_MANAGE_PRODUCTION: "can manage production",
     CAN_MANAGE_COSTITEM: "can manage cost item",
     CAN_MANAGE_PRODUCT: "can manage product",
+    CAN_MANAGE_DISCOUNT: "can manage discount",
+    CAN_APPLY_DISCOUNT: "can apply discount",
     CAN_CREATE_PRODUCT: "can create product",
     CAN_MANAGE_ALL: "can manage all",
     CAN_ASSIGN_PERMISSION: "can assign permission",

@@ -22,7 +22,7 @@ export default function UserCard({onDblClick = null, user, onDelete = null, ...p
     }
 
     return (
-        <div className="bg-white p-4 rounded sm:rounded-lg relative cursor-pointer select-none">
+        <div className="bg-white mx-auto p-4 rounded sm:rounded-lg relative cursor-pointer select-none">
             <div onClick={clicked} {...props}>
                 <div className="flex justify-start items-start w-full h-28">
                     <ProfilePicture

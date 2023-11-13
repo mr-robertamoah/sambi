@@ -16,7 +16,7 @@ class EnsureUserCanUpdateCategoryAction extends Action
                 PermissionEnum::CAN_MANAGE_ALL->value,
                 PermissionEnum::CAN_MANAGE_CATEGORY->value,
             ]) ||
-            $categoryDTO->user->addedCategory($categoryDTO->Category)
+            $categoryDTO->user->addedCategory($categoryDTO->category)
         ) return;
 
         throw new CategoryException("Sorry, you are not permitted to update category with {$categoryDTO->category->name} name. Alert administrator if you think this is a mistake.", 422);

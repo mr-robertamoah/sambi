@@ -19,11 +19,12 @@ export default function Index({ auth, products }) {
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, delete: routeDelete, post, processing, errors, reset } = useForm({
+    const { data, setData, delete: routeDelete, post, processing, errors, reset, clearErrors } = useForm({
         name: '',
         description: '',
         selling_price: "",
         file: null,
+        file_id: null,
     });
     let newData = {
         id: '',
@@ -39,6 +40,7 @@ export default function Index({ auth, products }) {
     useEffect(function () {
         if (!openModal) {
             reset()
+            clearErrors()
             setModalData(newData)
         }
 
@@ -47,22 +49,8 @@ export default function Index({ auth, products }) {
         
     }, [openModal])
 
-    // useEffect(function () {
-    //     if (!(success && errors.failed) && action == "delete") {
-    //         setOpenModal(false)
-    //     }
-    // }, [success, errors.failed])
-
     function toggleProductModal() {
         setOpenModal(!openModal)
-    }
-
-    function dataChanged() {
-        if (!!data.description && data.description != modalData.description) return true
-        if (!!data.name && data.name != modalData.name) return true
-        if (!!data.selling_price && data.selling_price != modalData.sellingPrice) return true
-        if (!!data.file) return true
-        return false
     }
 
     function newProduct() {
@@ -86,6 +74,7 @@ export default function Index({ auth, products }) {
                 file: null,
             }
         })
+        data.file_id = null
         setOpenModal(true)
     }
 
@@ -117,17 +106,13 @@ export default function Index({ auth, products }) {
             if (key == "file") {
                 if (value) d["src"] = URL.createObjectURL(value)
                 else {
-                    // console.log(data.delete_file == "0", action == "edit", prev.hasOldSrc)
-                    // if (data.delete_file == "0" && action == "edit" && prev.hasOldSrc) {
-                    //     setData("delete_file", "1")
-                    //     console.log(data.delete_file)
-                    // }
+                    data.file_id = products.data.find(p => p.id == modalData.id).image?.id
                     d["src"] = null
                 }
             }
 
             if (key == "sellingPrice") setData("selling_price", value)
-            else setData(key, value)
+            else if (key != "src") setData(key, value)
             return d
         })
     }
@@ -144,8 +129,9 @@ export default function Index({ auth, products }) {
 
     function updateProduct() {
         post(route("product.update", modalData.id), {
-            onSuccess: (e) => {
+            onSuccess: (res) => {
                 reset()
+                setData("file_id", res.props.products.data.find(p => p.id == modalData.id)?.image?.id)
                 setSuccess(`${modalData.name} product has been successfully updated.`)
             }
         })
@@ -172,7 +158,7 @@ export default function Index({ auth, products }) {
                 <PrimaryButton onClick={newProduct}>new</PrimaryButton>
             </div>
 
-            <div className={`px-6 py-12 gap-6 flex-wrap ${products.meta?.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
+            <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${products.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
                 {products.meta?.total ? products.data.map((product) =>(<ProductCard
                     key={product.id}
                     product={product}
@@ -218,7 +204,10 @@ export default function Index({ auth, products }) {
                             value={modalData.name}
                             className="mt-1 block w-full"
                             isFocused={true}
-                            onChange={(e) => updateModelData('name', e.target.value)}
+                            onChange={(e) => {
+                                clearErrors("name")
+                                updateModelData('name', e.target.value)
+                            }}
                         />
 
                         <InputError message={errors.name} className="mt-2" />
@@ -232,7 +221,10 @@ export default function Index({ auth, products }) {
                             name="description"
                             value={modalData.description}
                             className="mt-1 block w-full"
-                            onChange={(e) => updateModelData('description', e.target.value)}
+                            onChange={(e) => {
+                                clearErrors("description")
+                                updateModelData('description', e.target.value)
+                            }}
                         />
 
                         <InputError message={errors.description} className="mt-2" />
@@ -249,6 +241,7 @@ export default function Index({ auth, products }) {
                             className="mt-1 block w-full"
                             placeholder="0.00"
                             onChange={(e) => {
+                                clearErrors("selling_price")
                                 updateModelData('sellingPrice', e.target.value)
                             }}
                         />
@@ -263,13 +256,21 @@ export default function Index({ auth, products }) {
                             defaultFilename={modalData.filename ?? "no image"}
                             defaultButtonText="upload image"
                             src={modalData.src}
+                            fileId={data.file_id}
                             onChange={(e) => {
+                                clearErrors("file")
                                 updateModelData('file', e.target.files.length ? e.target.files[0] : null)
                             }}
                             onDelete={(e) => {
+                                clearErrors("file")
                                 updateModelData('file', null)
                             }}
-                            getFileOnDelete={action == "edit" ? true : false}
+                            keepFile={() => {
+                                clearErrors("file")
+                                data.file_id = null
+                                updateModelData("src", products.data.find(p => p.id == modalData.id).image?.src)
+                            }}
+                            // getFileOnDelete={action == "edit" ? true : false}
                         ></FileInput>
 
                         <InputError message={errors.file} className="mt-2" />
@@ -278,7 +279,14 @@ export default function Index({ auth, products }) {
                     <div className="flex items-center justify-end mt-4">
                         
                         <PrimaryButton className="ml-4 mb-4" 
-                            disabled={processing || (action == "edit" && !(!!data.description || !!data.name || !!data.file || !!data.selling_price))}
+                            disabled={
+                                processing || 
+                                (
+                                    action == "edit" && 
+                                    !(
+                                        !!data.description || !!data.name || 
+                                        !!data.file || !!data.selling_price || !!data.file_id
+                                ))}
                         >
                             {action}
                         </PrimaryButton>

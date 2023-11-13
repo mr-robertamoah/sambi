@@ -2,12 +2,22 @@
 
 namespace App\DTOs;
 
+use App\Models\Cost;
+use App\Models\CostItem;
+use App\Models\User;
 use Illuminate\Http\Request;
 use MrRobertAmoah\DTO\BaseDTO;
 
 class CostDTO extends BaseDTO
 {
-    //set properties that correspond with request inputs
+    public ?User $user = null;
+    public ?CostItem $costItem = null;
+    public ?Cost $cost = null;
+    public string|int|null $costItemId = null;
+    public string|int|null $costId = null;
+    public string|null $date = null;
+    public string|null $note = null;
+    public string|null $numberOfUnits = null;
     
     /**
      * assign data (filled or validated) to the dto properties as an 

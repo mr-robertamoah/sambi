@@ -9,10 +9,10 @@ export default function Paginator({
         <div className={`flex pb-4 justify-center px-6 sm:items-center sm:justify-between max-w-3xl mx-auto ${className}`}>
             <div>
                 {hasFirstAndLast &&(<PrimaryButton className="mr-2" disabled={disableFirst} onClick={onClickFirst}>first</PrimaryButton>)}
-                <PrimaryButton disabled={disablePrevious} onClick={onClickPrevious}>previous</PrimaryButton>
+                <PrimaryButton className="mx-2" disabled={disablePrevious} onClick={onClickPrevious}>previous</PrimaryButton>
             </div>
             <div>
-                <PrimaryButton disabled={disableNext} onClick={onClickNext}>next</PrimaryButton>
+                <PrimaryButton className="mx-2" disabled={disableNext} onClick={onClickNext}>next</PrimaryButton>
                 {hasFirstAndLast &&(<PrimaryButton className="ml-2" disabled={disableLast} onClick={onClickLast}>last</PrimaryButton>)}
             </div>
         </div>

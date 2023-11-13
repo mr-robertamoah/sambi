@@ -1,44 +1,59 @@
 import Alert from '@/Components/Alert';
 import Creator from '@/Components/Creator';
 import DeleteButton from '@/Components/DeleteButton';
-import FileInput from '@/Components/FileInput';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
-import Paginator from '@/Components/Paginator';
 import PrimaryButton from '@/Components/PrimaryButton';
-import ProductCard from '@/Components/ProductCard';
 import TextBox from '@/Components/TextBox';
 import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, useForm } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { useState, useEffect, useRef } from 'react';
+import Select from '@/Components/Select';
+import Table from '@/Components/Table';
+import ActionButton from '@/Components/ActionButton';
+import Badge from '@/Components/Badge';
+import getDate from '@/Helpers/getDate';
 
-export default function Index({ auth, products }) {
+export default function Index({ auth, costs, users, costItems, filtered, filteredData }) {
 
+    let tableDiv = useRef(null)
+    let [filterBy, setFilterBy] = useState("")
+    let [refresh, setRefresh] = useState(false)
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
-        description: '',
-        selling_price: "",
-        file: null,
+    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+        cost_item_id: '',
+        number_of_units: '',
+        date: "",
+        note: "",
+        user_id: "",
+        date_start: "",
+        date_end: "",
     });
     let newData = {
         id: '',
         name: '',
-        description: '',
-        sellingPrice: "",
-        file: null,
-        filename: null,
-        src: null,
+        note: '',
+        numberOfUnits: "",
+        costItemId: '',
+        date: '',
     }
+    let filters = [
+        {query: "user_id", text: "person who added"}, 
+        {query: "cost_item_id", text: "cost item"}, 
+        {query: "dates", text: "date between"},
+        {query: "date", text: "date on"},
+    ]
+    let [filterData, setFilterData] = useState({});
     let [modalData, setModalData] = useState(newData);
 
     useEffect(function () {
         if (!openModal) {
             reset()
+            clearErrors()
             setModalData(newData)
         }
 
@@ -47,56 +62,77 @@ export default function Index({ auth, products }) {
         
     }, [openModal])
 
-    // useEffect(function () {
-    //     if (!(success && errors.failed) && action == "delete") {
-    //         setOpenModal(false)
-    //     }
-    // }, [success, errors.failed])
+    useEffect(function () {
+        // reset()
+        // setRefresh(false)
 
-    function toggleProductModal() {
+        if (filterBy == "user_id") setFilterData(users.data.map(user => {
+            return {key: user.name, value: user.id}
+        }))
+        if (filterBy == "cost_item_id") setFilterData(costItems.data.map(costItem => {
+            return {key: costItem.name, value: costItem.id}
+        }))
+    }, [filterBy])
+
+    useEffect(() => {
+        if (!filteredData) return
+
+        if (filteredData["cost_item_id"]) {
+            setFilterBy("cost_item_id")
+            setRefresh(true)
+            data.cost_item_id = filteredData["cost_item_id"]
+        }
+        if (filteredData["user_id"]) {
+            setFilterBy("user_id")
+            setRefresh(true)
+            data.user_id = filteredData["user_id"]
+        }
+        if (filteredData["date"]) {
+            setFilterBy("date")
+            setRefresh(true)
+            data.date = filteredData["date"]
+        }
+        if (filteredData["date_start"] && filteredData["date_end"]) {
+            setFilterBy("dates")
+            setRefresh(true)
+            data.date_start = filteredData["date_start"]
+            data.date_end = filteredData["date_end"]
+        }
+    }, [filteredData])
+
+    function toggleModal() {
         setOpenModal(!openModal)
     }
 
-    function dataChanged() {
-        if (!!data.description && data.description != modalData.description) return true
-        if (!!data.name && data.name != modalData.name) return true
-        if (!!data.selling_price && data.selling_price != modalData.sellingPrice) return true
-        if (!!data.file) return true
-        return false
-    }
-
-    function newProduct() {
+    function newCost() {
         setAction("create")
         reset()
         setModalData(newData)
         setOpenModal(true)
     }
 
-    function editProduct(product) {
-        setAction("edit")
+    function updateModalData(cost) {
         setModalData((prev) => {
             return {
-                id: product.id, 
-                name: product.name, 
-                description: product.description ?? "", 
-                sellingPrice: product.sellingPrice, 
-                src: product.image?.src, 
-                hasOldSrc: !!(product.image?.src), 
-                filename: product.image?.name,
-                file: null,
+                id: cost.id, 
+                name: cost.costItem.name,
+                numberOfUnits: cost.numberOfUnits, 
+                note: cost.note ?? "", 
+                date: getDate(cost.date),
+                costItemId: cost.costItem.id,
             }
         })
+    }
+
+    function editCost(cost) {
+        setAction("edit")
+        updateModalData(cost)
         setOpenModal(true)
     }
 
-    function removeProduct(product) {
+    function removeCost(cost) {
         setAction("delete")
-        setModalData((prev) => {
-            return {
-                id: product.id, 
-                name: product.name,
-            }
-        })
+        updateModalData(cost)
         setOpenModal(true)
     }
 
@@ -104,59 +140,66 @@ export default function Index({ auth, products }) {
         event.preventDefault()
 
         if (action == "create") {
-            return createProduct()
+            return createCost()
         }
 
-        updateProduct()
+        updateCost()
     }
 
-    function updateModelData(key, value) {
+    function updateData(key, value) {
         setModalData((prev) => {
             let d = {...prev}
             d[key] = value
-            if (key == "file") {
-                if (value) d["src"] = URL.createObjectURL(value)
-                else {
-                    // console.log(data.delete_file == "0", action == "edit", prev.hasOldSrc)
-                    // if (data.delete_file == "0" && action == "edit" && prev.hasOldSrc) {
-                    //     setData("delete_file", "1")
-                    //     console.log(data.delete_file)
-                    // }
-                    d["src"] = null
-                }
-            }
 
-            if (key == "sellingPrice") setData("selling_price", value)
-            else setData(key, value)
+            if (key == "numberOfUnits") setData("number_of_units", value)
+            else if (key == "costItemId") setData("cost_item_id", value)
+            else if (["note", "date"].includes(key)) setData(key, value)
             return d
         })
     }
 
-    function createProduct() {
-        post(route("product.create"), {
+    function createCost() {
+        post(route("cost.create"), {
             onSuccess: (e) => {
                 reset()
                 setModalData(newData)
-                setSuccess("Product has been successfully created.")
+                setSuccess("Cost item has been successfully created.")
             }
         })
     }
 
-    function updateProduct() {
-        post(route("product.update", modalData.id), {
+    function updateCost() {
+        post(route("cost.update", modalData.id), {
             onSuccess: (e) => {
                 reset()
-                setSuccess(`${modalData.name} product has been successfully updated.`)
+                setSuccess(`${modalData.name} cost item has been successfully updated.`)
             }
         })
     }
 
-    function deleteProduct() {
-        console.log(route("product.delete", modalData.id))
-        router.delete(route("product.delete", modalData.id), {
+    function deleteCost() {
+        router.delete(route("cost.delete", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
-                setSuccess(`${modalData.name} product has been successfully deleted.`)
+                setSuccess(`${modalData.name} cost item has been successfully deleted.`)
+            }
+        })
+    }
+
+    function getName() {
+        let objs = filterBy == "user_id" ? users.data : costItems.data
+        let name = objs.find(ob => ob.id == data[filterBy])?.id 
+
+        return name ?? ""
+    }
+
+    function getCosts() {
+        router.get(route("cost.index") + 
+            `?user_id=${data.user_id}&cost_item_id=${data.cost_item_id}&date_start=${data.date_start}&date_end=${data.date_end}&date=${data.date}`, {
+            onSuccess: (res) => {
+                console.log(res)
+                // setFilterBy("")
+                // setRefresh(false)
             }
         })
     }
@@ -164,124 +207,246 @@ export default function Index({ auth, products }) {
     return (
         <AuthenticatedLayout
             user={auth.user?.data}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Products</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Costs</h2>}
         >
-            <Head title="Products" />
+            <Head title="Costs" />
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
-                <div className="text-sm text-gray-600">{products.meta?.total} product{products.meta?.total == 1 ? "" : "s"}</div>
-                <PrimaryButton onClick={newProduct}>new</PrimaryButton>
+                <div className="text-sm text-gray-600">{costs.meta?.total} cost entr{costs.meta?.total == 1 ? "y" : "ies"}</div>
+                {costItems.data.length ? <PrimaryButton onClick={newCost}>new</PrimaryButton> :
+                    <Link
+                        href={route('cost_item.index')}
+                        className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        got to cost items to create at least one
+                    </Link>
+                }
             </div>
 
-            <div className={`px-6 py-12 gap-6 flex-wrap ${products.meta?.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
-                {products.meta?.total ? products.data.map((product) =>(<ProductCard
-                    key={product.id}
-                    product={product}
-                    onDblClick={(e) => editProduct(product)}
-                    onDelete={(e) => removeProduct(product)}
-                ></ProductCard>)) : <div>no products have been added</div>}
-                
+            <div ref={tableDiv} className={`px-6 py-12 w-full block overflow-x-auto`}>
+                <Table
+                    cols={["cost item", "price per unit", "unit", "number of units", "total cost", "date of transaction", "added", "actions"]}
+                    heading={"incurred costs"}
+                    data={costs.data}
+                    links={costs.links}
+                    strips={true}
+                    scrollable={tableDiv}
+                    rowIdx={[2, 5]}
+                    rowClassName={`text-green-800 font-semibold`}
+                    rowDataKeys={[
+                        "costItem.name", 
+                        (item) => `GHȻ ${item.costItem.unitCharge}`, "costItem.unit", "numberOfUnits",, (item) => `GHȻ ${item.numberOfUnits * item.costItem.unitCharge}`, "dateForHumans"]}
+                    actions={[
+                        {func: (item) => editCost(item), disabled: (item) => processing, className: "bg-blue-600", text: "edit"},
+                        {func: (item) => removeCost(item), disabled: (item) => processing, className: "bg-red-600 hover:bg-red-500 active:bg-red-700 focus:bg-red-500 focus:ring-red-500", text: "delete"}
+                    ]}
+                >
+                    {filtered && <div className="w-full flex justify-start items-center my-2">
+                        <div className="text-sm capitalize text-start shrink-0">filters: </div>
+                        <div className="w-full flex justify-start items-center font-normal">
+                            {data.cost_item_id && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
+                                data.cost_item_id = ""
+                                getCosts()
+                            }}>filtered by {costItems.data.find(u => u.id == data.cost_item_id).name} cost item</Badge>}
+                            {data.date && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
+                                data.date = ""
+                                getCosts()
+                            }}>filtered using {getDate(data.date)} date</Badge>}
+                            {data.date_end && data.date_start && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
+                                data.date_start = ""
+                                data.date_end = ""
+                                getCosts()
+                            }}>filtered using dates between {data.date_start} and {data.date_end}</Badge>}
+                            {data.user_id && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
+                                data.user_id = ""
+                                getCosts()
+                            }}>filtered by {users.data.find(u => u.id == data.user_id).name}</Badge>}
+                        </div>
+                    </div>}
+                    <div className="w-full flex justify-start items-center text-sm text-gray-600 font-normal">
+                        <Select
+                            value={filterBy}
+                            placeholder="select something to filter costs by"
+                            optionKey="text"
+                            valueKey="query"
+                            options={filters}
+                            className="mt-1 max-w-[200px] mr-2 p-1"
+                            onChange={(e) => {
+                                setFilterBy(e.target.value)}
+                            }
+                        />
+                        {["user_id", "cost_item_id"].includes(filterBy) && <Select
+                            type="text"
+                            value={filterBy == "user_id" ? data.user_id : data.cost_item_id}
+                            placeholder={`filter by ${filters.find(f => f.query == filterBy)?.text}`}
+                            optionKey="key"
+                            valueKey="value"
+                            options={filterData}
+                            className="mt-1 max-w-[200px] mr-2 p-1"
+                            onChange={(e) => {
+                                setData(filterBy, e.target.value)
+                                data[filterBy] = e.target.value
+                                if (filtered) getCosts()
+                                if (e.target.value) setRefresh(true)
+                            }}
+                        />}
+                        {"date" == filterBy && <TextInput
+                            type="date"
+                            placeholder={"select date"}
+                            className="mt-1 max-w-[200px] mr-2 p-1"
+                            value={data.date}
+                            onChange={(e) => {
+                                data.date = e.target.value
+                                if (filtered) getCosts()
+                                setRefresh(true)
+                            }}
+                        />}
+                        {"dates" == filterBy && 
+                        <>
+                            <TextInput
+                                type="date"
+                                placeholder={"select start date"}
+                                className="mt-1 max-w-[200px] mr-2 p-1"
+                                value={data.date_start}
+                                onChange={(e) => {
+                                    setData("date_start", e.target.value)
+                                    data.date_start = e.target.value
+                                    console.log(data.date_start, e.target.value)
+                                    if (data.date_start && data.date_end && filtered) getCosts()
+                                    if (data.date_end) setRefresh(true)
+                                }}
+                            />
+                            <TextInput
+                                type="date"
+                                placeholder={"select end date"}
+                                className="mt-1 max-w-[200px] mr-2 p-1"
+                                value={data.date_end}
+                                onChange={(e) => {
+                                    setData("date_end", e.target.value)
+                                    data.date_end = e.target.value
+                                    if (data.date_start && data.date_end && filtered) getCosts()
+                                    if (data.date_start) setRefresh(true)
+                                }}
+                            />
+                        </>}
+                        {refresh && <ActionButton
+                            className='mt-1 max-w-[200px] mr-2 p-1'
+                            onClick={getCosts}
+                            >filter</ActionButton>}
+                        {(filtered || (data.cost_item_id || data.user_id || data.date || (data.date_end && data.date_start))) && <ActionButton
+                            className='mt-1 max-w-[200px] mr-2 p-1'
+                            onClick={() => {
+                                data.cost_item_id = ""
+                                data.date = ""
+                                data.user_id = ""
+                                data.date_end = ""
+                                data.date_start = ""
+                                getCosts()
+                            }}
+                            >clear filter</ActionButton>}
+                    </div>
+                </Table>
             </div>
-
-            {products.meta?.total > 10 && (<Paginator
-                className="my-12"
-                disablePrevious={!products.links.prev}
-                disableNext={!products.links.next}
-                onClickPrevious={(e) => router.get(products.links.prev ?? "")}
-                onClickNext={(e) => router.get(products.links.next ?? "")}
-            ></Paginator>)}
 
             <Creator className="mt-3"></Creator>
 
             <Modal
                 show={openModal}
-                onClose={toggleProductModal}
+                onClose={toggleModal}
             >
                 <Alert
                     show={errors.failed || success}
                     type={success ? "success" : "failed"}
                     onDisappear={() => {
-                        // if (success) setSuccess()
-                        // if (errors.failed) errors.failed = null
                         if (action == "delete" && !modalData.id) setOpenModal(false)
                     }}
                 >{success ?? errors.failed}</Alert>
                 {processing && (<div className={`w-full text-center flex rounded-full mt-4 mb-2 justify-center items-center ${action != "delete" ? "text-green-600" : "text-red-600"}`}>
                     <div className={`mr-2 animate-ping w-3 h-3 ${action != "delete" ? "bg-green-400" : "bg-red-400"}`}></div> {action == "create" ? "creating" : action == "edit" ? "editing" : "deleting"}...
                 </div>)}
-                <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 uppercase">{action} Product</div>
+                <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 uppercase">{action} Cost </div>
                 {action != "delete" && (<form encType="multipart/form-data" className="mx-auto p-2 max-w-md" onSubmit={submit}>
-                    <div>
-                        <InputLabel htmlFor="name" value="Name" />
 
-                        <TextInput
-                            id="name"
+                <div className="mt-4">
+                        <InputLabel htmlFor="costItem" value="Cost Item" />
+
+                        <Select
+                            id="costItem"
                             type="text"
-                            name="name"
-                            value={modalData.name}
-                            className="mt-1 block w-full"
+                            name="costItem"
+                            value={modalData.costItemId}
+                            placeholder="select cost item"
+                            optionKey="name"
+                            valueKey="id"
                             isFocused={true}
-                            onChange={(e) => updateModelData('name', e.target.value)}
+                            options={costItems.data}
+                            className="mt-1 block w-full"
+                            onChange={(e) => {
+                                clearErrors("cost_item_id")
+                                updateData('costItemId', e.target.value)
+                            }}
                         />
 
-                        <InputError message={errors.name} className="mt-2" />
+                        <InputError message={errors.cost_item_id} className="mt-2" />
                     </div>
 
                     <div className="mt-4">
-                        <InputLabel htmlFor="description" value="Description" />
+                        <InputLabel htmlFor="date" value="Date" />
 
-                        <TextBox
-                            id="description"
-                            name="description"
-                            value={modalData.description}
+                        <TextInput
+                            id="date"
+                            type="date"
+                            name="date"
+                            value={modalData.date}
                             className="mt-1 block w-full"
-                            onChange={(e) => updateModelData('description', e.target.value)}
+                            // max={getDate(null)}
+                            onChange={(e) => {
+                                clearErrors("date")
+                                updateData('date', e.target.value)}}
                         />
 
-                        <InputError message={errors.description} className="mt-2" />
+                        <InputError message={errors.date} className="mt-2" />
                     </div>
                     
                     <div className="mt-4">
-                        <InputLabel htmlFor="selling_price" value="Selling Price" />
+                        <InputLabel htmlFor="number_of_units" value="Number of Units" />
 
                         <TextInput
-                            id="selling_price"
-                            name="selling_price"
-                            type="text"
-                            value={modalData.sellingPrice}
+                            id="number_of_units"
+                            name="number_of_units"
+                            type="number"
+                            value={modalData.numberOfUnits}
                             className="mt-1 block w-full"
-                            placeholder="0.00"
+                            placeholder="0"
                             onChange={(e) => {
-                                updateModelData('sellingPrice', e.target.value)
+                                clearErrors("number_of_units")
+                                updateData('numberOfUnits', e.target.value)
                             }}
                         />
 
-                        <InputError message={errors.selling_price} className="mt-2" />
+                        <InputError message={errors.number_of_units} className="mt-2" />
                     </div>
 
-                    <div className="block mt-4">
-                        <FileInput 
-                            id="file"
-                            name="file"
-                            defaultFilename={modalData.filename ?? "no image"}
-                            defaultButtonText="upload image"
-                            src={modalData.src}
-                            onChange={(e) => {
-                                updateModelData('file', e.target.files.length ? e.target.files[0] : null)
-                            }}
-                            onDelete={(e) => {
-                                updateModelData('file', null)
-                            }}
-                            getFileOnDelete={action == "edit" ? true : false}
-                        ></FileInput>
+                    <div className="mt-4">
+                        <InputLabel htmlFor="note" value="Note" />
 
-                        <InputError message={errors.file} className="mt-2" />
+                        <TextBox
+                            id="note"
+                            name="note"
+                            value={modalData.note}
+                            className="mt-1 block w-full"
+                            onChange={(e) => {
+                                clearErrors("note")
+                                updateData('note', e.target.value)}}
+                        />
+
+                        <InputError message={errors.note} className="mt-2" />
                     </div>
 
                     <div className="flex items-center justify-end mt-4">
                         
                         <PrimaryButton className="ml-4 mb-4" 
-                            disabled={processing || (action == "edit" && !(!!data.description || !!data.name || !!data.file || !!data.selling_price))}
+                            disabled={processing || (action == "edit" && !(!!data.date || !!data.cost_item_id || !!data.number_of_units || !!data.note))}
                         >
                             {action}
                         </PrimaryButton>
@@ -289,10 +454,10 @@ export default function Index({ auth, products }) {
                 </form>)}
                 {action == "delete" && (
                     <div className="mx-auto w-4/5 text-center mb-3">
-                        <div className="text-gray-600">Are you sure you want to delete <span className="capitalize font-semibold">{modalData.name}</span> product</div>
+                        <div className="text-gray-600">Are you sure you want to delete cost associated with <span className="capitalize font-semibold">{modalData.name}</span> cost item</div>
                         <div className="flex justify-between items-center mt-3">
                             <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deleteProduct}>delete</DeleteButton>
+                            <DeleteButton onClick={deleteCost}>delete</DeleteButton>
                         </div>
                     </div>
                 )}

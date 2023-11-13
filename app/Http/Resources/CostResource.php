@@ -14,6 +14,15 @@ class CostResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            "id" => $this->id,
+            "note" => $this->note,
+            "numberOfUnits" => $this->number_of_units,
+            "costItem" => new CostItemResource($this->costItem),
+            "user" => new UserResource($this->user),
+            "date" => $this->date,
+            "dateForHumans" => $this->date->rawFormat("M d, Y"),
+            "createdAt" => $this->created_at->diffForHumans(),
+        ];
     }
 }

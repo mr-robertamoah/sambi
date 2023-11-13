@@ -24,7 +24,10 @@ class PermissionController extends Controller
     public function index(Request $request)
     {
         return Inertia::render('Permissions/Index', [
-            "permissions" => $request->user()?->isPermittedTo(name: PermissionEnum::CAN_MANAGE_ALL->value) ?
+            "permissions" => $request->user()?->isPermittedTo(names: [
+                PermissionEnum::CAN_MANAGE_ALL->value,
+                PermissionEnum::CAN_ASSIGN_PERMISSION->value,
+            ]) ?
                 PermissionResource::collection(
                     Permission::all()
                 ) : [],

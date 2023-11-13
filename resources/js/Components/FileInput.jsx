@@ -2,7 +2,11 @@ import { forwardRef, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import Image from './Image';
 
-export default forwardRef(function FileInput({ src = null, defaultButtonText = "upload file", defaultFilename = "no file", clearName = false, onDelete = null, onChange, getFileOnDelete = false}, ref) {
+export default forwardRef(function FileInput({ 
+    src = null, defaultButtonText = "upload file", defaultFilename = "no file", 
+    clearName = false, onDelete = null, onChange, getFileOnDelete = false, fileId = null,
+    keepFile = () => {}
+}, ref) {
     const input = ref ? ref : useRef();
     let [fileName, setFileName] = useState()
 
@@ -43,7 +47,8 @@ export default forwardRef(function FileInput({ src = null, defaultButtonText = "
             <div className="flex items-center">
                 {!src && (<button className='inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white lowercase tracking-widest hover:bg-blue-500 focus:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150'
                     onClick={getFile}>{defaultButtonText}</button>)}
-                
+                {!src && fileId && (<button className='ml-2 inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white lowercase tracking-widest hover:bg-blue-500 focus:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150'
+                    onClick={keepFile}>keep file</button>)}
             </div>
 
             {src && (<div className="block mt-4 w-1/2 mx-auto text-center bg-gray-400 max-h-40 relative">

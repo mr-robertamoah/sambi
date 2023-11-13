@@ -3,7 +3,10 @@ import DashboardCard from '@/Components/DashboardCard';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 
-export default function Dashboard({ auth, products, categories, users, costItems, permissions, stats, production, sales, costs }) {
+export default function Dashboard({ 
+    auth, products, categories, users, costItems, 
+    permissions, stats, production, sales, costs, discounts
+}) {
     
     return (
         <>
@@ -102,6 +105,16 @@ export default function Dashboard({ auth, products, categories, users, costItems
                         <li className="">make sales entries</li>
                         <li>edit sales entries</li>
                         <li>delete entries</li>
+                    </ul>
+                </DashboardCard>}
+                
+                {discounts != null && <DashboardCard numberOfEntries={discounts} title="discounts" cardRoute={route("discount.index")}>
+                    <p>This section actually lets you manage all discounts. This page allows you to handle discounts allowable on the platform.</p>
+                    <p>The following are some of the actions that you can perform:</p>
+                    <ul className="list-disc px-6 text-sm py-2">
+                        <li className="">add new discounts</li>
+                        <li>edit discounts</li>
+                        <li>delete discounts</li>
                     </ul>
                 </DashboardCard>}
             </div>

@@ -5,37 +5,38 @@ import TextInput from '@/Components/TextInput';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 import FileInput from '@/Components/FileInput';
-import { useState } from 'react';
-import Image from '@/Components/Image';
-import ProfilePicture from '@/Components/ProfilePicture';
+import { useState, useEffect } from 'react';
 
 export default function UpdateProfileInformation({ mustVerifyEmail, status, className = '' }) {
     const user = usePage().props.auth.user?.data;
 
-    const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
+    const { data, setData, post, errors, processing, recentlySuccessful, clearErrors } = useForm({
         name: user.name,
         email: user.email,
         image: user.image,
-        image_id: user.image?.id,
+        image_id: null,
     });
+    let [image, setImage] = useState({})
 
-    let newData = {
-        src: user.image?.src,
-        name: user.image?.name,
-        file: null
-    }
-    let [image, setImage] = useState(newData)
+    useEffect(() => {
+        setImage({
+            src: user.image?.src,
+            name: user.image?.name,
+            file: null
+        })
+    }, [user])
 
     function updateImage(image) {
-        if (data.image_id) data.image_id = null
+        if (image && data.image_id) data.image_id = null
+        if (!image) data.image_id = user.image?.id
         setImage((prev) => {
-            let data = {...prev}
-            data.src = null
+            let d = {...prev}
+            d.src = null
             if (image)
-                data.src = URL.createObjectURL(image),
-            data.name = image?.name,
-            data.file = image
-            return data
+                d.src = URL.createObjectURL(image),
+            d.name = image?.name,
+            d.file = image
+            return d
         })
 
         setData("image", image)
@@ -45,8 +46,14 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
         e.preventDefault();
 
         post(route('profile.update'), {
-            onStart: () => {
-                // setImage(newData)
+            onSuccess: (res) => {
+                data.image_id = res.props.auth.user.data.image?.id
+                data.image = null
+                setImage({
+                    src: res.props.auth.user.data.image?.src,
+                    name: res.props.auth.user.data.image?.name,
+                    file: null
+                })
             }
         });
     };
@@ -69,7 +76,9 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                         id="name"
                         className="mt-1 block w-full"
                         value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
+                        onChange={(e) => {
+                            clearErrors("name")
+                            setData('name', e.target.value)}}
                         isFocused
                         autoComplete="name"
                     />
@@ -85,7 +94,9 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                         type="email"
                         className="mt-1 block w-full"
                         value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
+                        onChange={(e) => {
+                            clearErrors("email")
+                            setData('email', e.target.value)}}
                         autoComplete="username"
                     />
 
@@ -100,13 +111,22 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
                         defaultFilename={data.image?.name ?? "no image"}
                         defaultButtonText="upload profile image"
                         src={image.src}
+                        fileId={data.image_id}
                         onChange={(e) => {
+                            clearErrors("file")
                             updateImage(e.target.files.length ? e.target.files[0] : null)
                         }}
                         onDelete={(e) => {
+                            clearErrors("file")
                             updateImage(null)
                         }}
-                        getFileOnDelete={false}
+                            keepFile={() => {
+                                clearErrors("file")
+                                setImage((prev) => {
+                                    return {...prev, src: user.image?.src}
+                                })
+                                data.image_id = null
+                            }}
                     ></FileInput>
 
                     <InputError message={errors.image} className="mt-2" />

@@ -14,7 +14,8 @@ class UpdateCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "name" => "required_without_all:description",
+            "description" => "required_without_all:name",
         ];
     }
 }

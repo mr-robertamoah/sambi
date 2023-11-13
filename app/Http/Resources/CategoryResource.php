@@ -17,7 +17,9 @@ class CategoryResource extends JsonResource
         return [
             "id" => $this->id,
             "name" => $this->name,
-            "description" => $this->description
+            "description" => $this->description,
+            "user" => new UserResource($this->user),
+            "createdAt" => $this->created_at->diffForHumans()
         ];
     }
 }

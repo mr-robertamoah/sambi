@@ -14,8 +14,9 @@ return new class extends Migration
     {
         Schema::create('fileables', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(File::class);
+            $table->foreignIdFor(File::class)->constrained()->cascadeOnDelete();
             $table->nullableMorphs("fileable");
+            $table->softDeletes();
             $table->timestamps();
         });
     }

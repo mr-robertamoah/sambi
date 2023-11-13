@@ -36,7 +36,7 @@ class ProfileController extends Controller
                 "user" => $request->user(),
                 "name" => $request->name,
                 "email" => $request->email,
-                "deleteImage" => $request->image_id ? false : true,
+                "deleteImage" => $request->image_id ? true : false,
                 "image" => $request->hasFile("image") ? $request->file("image") : null,
             ])
         );

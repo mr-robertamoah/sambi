@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Actions\Category\CreateCategoryAction;
 use App\Actions\Category\DeleteCategoryAction;
-use App\Actions\Category\EnsurecategoryExistsAction;
+use App\Actions\Category\EnsureCategoryExistsAction;
 use App\Actions\EnsureUserExistsAction;
 use App\Actions\Category\EnsureUserCanCreateCategoryAction;
 use App\Actions\Category\EnsureUserCanUpdateCategoryAction;
@@ -33,7 +33,7 @@ class CategoryService extends BaseService
             )
         );
 
-        EnsurecategoryExistsAction::make()->execute($categoryDTO);
+        EnsureCategoryExistsAction::make()->execute($categoryDTO);
 
         EnsureUserCanUpdateCategoryAction::make()->execute($categoryDTO);
 

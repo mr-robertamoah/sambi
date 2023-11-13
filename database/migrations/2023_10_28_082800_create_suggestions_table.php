@@ -14,8 +14,9 @@ return new class extends Migration
     {
         Schema::create('suggestions', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class);
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->longText("message");
+            $table->softDeletes();
             $table->timestamps();
         });
     }

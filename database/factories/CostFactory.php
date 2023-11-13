@@ -17,7 +17,8 @@ class CostFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            "number_of_units" => $this->faker->numberBetween(1,20),
+            "date" => $this->faker->dateTimeBetween("-1 year"),
         ];
     }
 }

@@ -15,12 +15,13 @@ return new class extends Migration
     {
         Schema::create('cost_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class);
-            $table->foreignIdFor(Category::class);
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Category::class)->constrained()->cascadeOnDelete();
             $table->string("name");
             $table->text("description")->nullable();
             $table->integer("unit_charge");
             $table->string("unit");
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -15,9 +15,10 @@ return new class extends Migration
     {
         Schema::create('permission_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class, "assigner_id");
-            $table->foreignIdFor(User::class, "assignee_id");
-            $table->foreignIdFor(Permission::class);
+            $table->foreignIdFor(User::class, "assigner_id")->constrained("users")->cascadeOnDelete();
+            $table->foreignIdFor(User::class, "assignee_id")->constrained("users")->cascadeOnDelete();
+            $table->foreignIdFor(Permission::class)->constrained()->cascadeOnDelete();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

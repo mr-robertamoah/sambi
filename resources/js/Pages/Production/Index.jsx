@@ -173,7 +173,7 @@ export default function Index({ auth, products }) {
                 <PrimaryButton onClick={newProduct}>new</PrimaryButton>
             </div>
 
-            <div className={`px-6 py-12 gap-6 flex-wrap ${products.meta?.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
+            <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${products.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
                 {products.meta?.total ? products.data.map((product) =>(<ProductCard
                     key={product.id}
                     product={product}

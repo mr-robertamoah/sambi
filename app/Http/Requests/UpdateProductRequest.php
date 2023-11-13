@@ -22,10 +22,11 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "name" => "required_without_all:selling_price,file,description",
-            "description" => "required_without_all:name,selling_price,file",
-            "selling_price" => "required_without_all:name,file,description",
-            "file" => "required_without_all:selling_price,name,description",
+            "name" => "required_without_all:selling_price,file,file_id,description",
+            "description" => "required_without_all:name,selling_price,file,file_id",
+            "selling_price" => "required_without_all:name,file,file_id,description",
+            "file" => "required_without_all:selling_price,name,description,file_id",
+            "file_id" => "required_without_all:selling_price,name,description,file",
         ];
     }
 }

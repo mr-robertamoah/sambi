@@ -59,9 +59,12 @@ class ProductService extends BaseService
 
         EnsureUserCanUpdateProductAction::make()->execute($productDTO);
 
-        if (HasFileAction::make()->execute($productDTO, "uploadedFile")) {
+        $hasFile = HasFileAction::make()->execute($productDTO, "uploadedFile");
+
+        if ($hasFile || ($productDTO->deleteFile && $productDTO->product->hasFile()))
             DeleteFileAction::make()->execute(fileable: $productDTO->product);
 
+        if ($hasFile) {
             $fileDTO = FileDTO::new()->fromArray(
                 StoreFileAction::make()->execute(
                     dto: $productDTO, 

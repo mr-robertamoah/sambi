@@ -19,7 +19,7 @@ export default function Index({ auth, categories }) {
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         name: '',
         description: '',
     });
@@ -33,6 +33,7 @@ export default function Index({ auth, categories }) {
     useEffect(function () {
         if (!openModal) {
             reset()
+            clearErrors()
             setModalData(newData)
         }
 
@@ -92,6 +93,7 @@ export default function Index({ auth, categories }) {
     }
 
     function updateModelData(key, value) {
+        clearErrors(key)
         setModalData((prev) => {
             let d = {...prev}
             d[key] = value
@@ -120,7 +122,6 @@ export default function Index({ auth, categories }) {
     }
 
     function deleteCategory() {
-        console.log(route("category.delete", modalData.id))
         router.delete(route("category.delete", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
@@ -141,7 +142,7 @@ export default function Index({ auth, categories }) {
                 <PrimaryButton onClick={newCategory}>new</PrimaryButton>
             </div>
 
-            <div className={`px-6 py-12 gap-6 flex-wrap ${categories.meta?.total ? "grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
+            <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${categories.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
                 {categories.meta?.total ? categories.data.map((category) =>(<CategoryCard
                     key={category.id}
                     category={category}

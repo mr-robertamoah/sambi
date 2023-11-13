@@ -17,9 +17,10 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        $user = $request->user();
         $users = [];
         $wantsJson = $request->wantsJson();
-        $permitted = $request->user()?->isPermittedTo(names: [
+        $permitted = $user?->isPermittedTo(names: [
             PermissionEnum::CAN_MANAGE_ALL->value,
             PermissionEnum::CAN_MANAGE_USER->value,
             PermissionEnum::CAN_VIEW_USER->value,
@@ -32,7 +33,12 @@ class UserController extends Controller
         ]);
         
         $users = User::query()
-                ->whereNot("id", $request->user()->id);
+                ->whereNot("id", $user->id);
+
+        if (!$request->added_cost && $user->isNotPermittedTo(name: PermissionEnum::CAN_MANAGE_ALL->value))
+            $users->whereCannotManageAll();
+
+        if ($request->added_cost) $users->whereAddedCost();
 
         if ($request->name) $users->where("name", "LIKE", "%{$request->name}%");
 

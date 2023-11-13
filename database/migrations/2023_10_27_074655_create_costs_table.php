@@ -15,10 +15,12 @@ return new class extends Migration
     {
         Schema::create('costs', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class);
-            $table->foreignIdFor(CostItem::class);
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(CostItem::class)->constrained()->cascadeOnDelete();
+            $table->text("note")->nullable();
             $table->integer("number_of_units");
             $table->dateTime("date");
+            $table->softDeletes();
             $table->timestamps();
         });
     }

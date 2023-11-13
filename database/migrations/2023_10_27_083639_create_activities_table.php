@@ -15,9 +15,10 @@ return new class extends Migration
     {
         Schema::create('activities', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class);
+            $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->nullableMorphs("itemable");
             $table->enum("action", ActivityActionEnum::values());
+            $table->softDeletes();
             $table->timestamps();
         });
     }

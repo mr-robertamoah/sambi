@@ -20,6 +20,8 @@ enum PermissionEnum: string
     case CAN_MANAGE_COST_ITEM = "can manage cost item";
     case CAN_MAKE_COST_ITEM_ENTRY = "can make cost item entry";
     case CAN_MANAGE_PRODUCT = "can manage product";
+    case CAN_MANAGE_DISCOUNT = "can manage discount";
+    case CAN_APPLY_DISCOUNT = "can apply discount";
     case CAN_MANAGE_ALL = "can manage all";
     case CAN_ASSIGN_PERMISSION = "can assign permission";
     case CAN_VIEW_STATS = "can view stats";

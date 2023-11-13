@@ -17,7 +17,10 @@ class CostItemFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            "name" => $this->faker->name,
+            "description" => $this->faker->sentence,
+            "unit" => ["per truck", "per trip", "per person", "per round"][random_int(0,3)],
+            "unit_charge" => round(rand(100, 1000) / 5, 2),
         ];
     }
 }

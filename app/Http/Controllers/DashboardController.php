@@ -6,6 +6,7 @@ use App\Enums\PermissionEnum;
 use App\Models\Category;
 use App\Models\Cost;
 use App\Models\CostItem;
+use App\Models\Discount;
 use App\Models\Permission;
 use App\Models\Product;
 use App\Models\Production;
@@ -23,7 +24,10 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             "products" => Product::query()->count(),
             "categories" => $user->isPermittedTo(
-                names: [PermissionEnum::CAN_MANAGE_ALL->value, PermissionEnum::CAN_MANAGE_CATEGORY->value],
+                names: [
+                    PermissionEnum::CAN_MANAGE_ALL->value, 
+                    PermissionEnum::CAN_MANAGE_CATEGORY->value
+                ],
             ) ? Category::query()->count() : null,
             "costItems" => $user->isPermittedTo(
                 names: [
@@ -54,8 +58,17 @@ class DashboardController extends Controller
             ],
             ) ? Production::query()->count() : null,
             "permissions" => $user->isPermittedTo(
-                name: PermissionEnum::CAN_MANAGE_ALL->value,
+                names: [
+                    PermissionEnum::CAN_MANAGE_ALL->value,
+                    PermissionEnum::CAN_ASSIGN_PERMISSION->value,
+                ],
             ) ? Permission::query()->count() : null,
+            "discounts" => $user->isPermittedTo(
+                names: [
+                    PermissionEnum::CAN_MANAGE_ALL->value,
+                    PermissionEnum::CAN_MANAGE_DISCOUNT->value,
+                ],
+            ) ? Discount::query()->count() : null,
             "stats" => $user->isPermittedTo(
                 names: [
                     PermissionEnum::CAN_MANAGE_ALL->value,
