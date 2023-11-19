@@ -161,7 +161,7 @@ export default function Index({ auth, permissions }) {
                 console.log(res)
                 // setModalData(newData)
                 setPermissionsData({
-                    data: [...res.data.detail.assignedUsers],
+                    data: [...res.data?.detail.assignedUsers],
                     id: modalData.id
                 })
             })
@@ -175,7 +175,7 @@ export default function Index({ auth, permissions }) {
             .then((res) => {
                 console.log(res)
                 // setModalData(newData)
-                setUsers([...res.data.users])
+                setUsers([...res.data?.users])
             })
             .finally(() => setLoading(false))
     }
@@ -183,7 +183,7 @@ export default function Index({ auth, permissions }) {
     function syncPermissions(assigned) {
         setLoading(true)
         setAction("syncing")
-        axios.post(route("user.permissions.update", auth.user.data.id), 
+        axios.post(route("user.permissions.update", auth.user.data?.id), 
         {
             "permission_ids": [
                 permissionsData.id
@@ -192,12 +192,12 @@ export default function Index({ auth, permissions }) {
         })
         .then((res) => {
             console.log(res, "sync")
-            setSuccess(res.data.success)
+            setSuccess(res.data?.success)
             setPermissionsData(prev => {
                 return {
                     id: prev.id,
                     data: [
-                        ...(prev.data.filter(item => item.id != assigned.id))
+                        ...(prev.data?.filter(item => item.id != assigned.id))
                     ]
                 }
             })
@@ -205,7 +205,7 @@ export default function Index({ auth, permissions }) {
         .catch((e) => {
             console.error(e, "sync")
             // setErrors(() => {
-            //     return {failed: e.response.data.message}
+            //     return {failed: e.response.data?.message}
             // })
         })
         .finally(() => {
@@ -216,7 +216,7 @@ export default function Index({ auth, permissions }) {
     function assignPermission(user) {
         setLoading(true)
         setAction("syncing")
-        axios.post(route("user.permissions.update", auth.user.data.id), 
+        axios.post(route("user.permissions.update", auth.user.data?.id), 
         {
             "permission_ids": [
                 permissionsData.id
@@ -225,10 +225,10 @@ export default function Index({ auth, permissions }) {
         })
         .then((res) => {
             console.log(res, "sync")
-            let arr = [...permissionsData.data.filter(d => d.assignee.id != user.id)]
-            if (res.data.assigned) arr = [...arr, res.data.assigned]
+            let arr = [...permissionsData.data?.filter(d => d.assignee.id != user.id)]
+            if (res.data?.assigned) arr = [...arr, res.data?.assigned]
             console.log(arr)
-            setSuccess(res.data.success)
+            setSuccess(res.data?.success)
             setPermissionsData(prev => {
                 return {
                     id: prev.id,
@@ -252,22 +252,22 @@ export default function Index({ auth, permissions }) {
             <Head title="Permissions" />
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
-                <div className="text-sm text-gray-600">{permissions.data.length} permssion{permissions.data.length == 1 ? "" : "s"}</div>
+                <div className="text-sm text-gray-600">{permissions.data?.length} permssion{permissions.data?.length == 1 ? "" : "s"}</div>
                 {can(auth.user.data, "manage", "permissions") && <div className="flex justify-end items-center">
                     <PrimaryButton onClick={newPermission}>new</PrimaryButton>
                     {permissionsData?.data && <>
                         <PrimaryButton className="ml-2" 
-                            onClick={() => editPermission(permissions.data.find(perm => perm.id == permissionsData.id))}
+                            onClick={() => editPermission(permissions.data?.find(perm => perm.id == permissionsData.id))}
                         >edit</PrimaryButton>
                         <DeleteButton className="ml-2" 
-                            onClick={() => removePermission(permissions.data.find(perm => perm.id == permissionsData.id))}
+                            onClick={() => removePermission(permissions.data?.find(perm => perm.id == permissionsData.id))}
                         >delete</DeleteButton>
                     </>}
                 </div>}
             </div>
 
             <div className={`p-6 flex justify-start items-center overflow-x-auto text-white bg-white`}>
-                {permissions.data.length ? permissions.data.map((permission) =>(<PermissionBadge
+                {permissions.data?.length ? permissions.data?.map((permission) =>(<PermissionBadge
                     key={permission.id}
                     permission={permission}
                     active={permission.id == modalData?.id}
@@ -342,7 +342,7 @@ export default function Index({ auth, permissions }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {permissionsData?.data.length ? permissionsData?.data.map((assigned, index) => <tr className=" text-sm font-normal table-row border-b-2 whitespace-nowrap overflow-x-auto" key={index + 1}>
+                            {permissionsData?.data?.length ? permissionsData?.data?.map((assigned, index) => <tr className=" text-sm font-normal table-row border-b-2 whitespace-nowrap overflow-x-auto" key={index + 1}>
                                 <td className="font-normal py-4 px-2 border-r-2 min-h-[20px] whitespace-nowrap">
                                     <div className="flex justify-start w-full items-center">
                                             <ProfilePicture
@@ -449,8 +449,8 @@ export default function Index({ auth, permissions }) {
                     <div className="mx-auto w-4/5 text-center mb-3">
                         <div className="text-gray-600">Are you sure you want to delete <span className="capitalize font-semibold">{modalData.name}</span> permission</div>
                         <div className="flex justify-between items-center mt-3">
-                            <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deletePermission}>delete</DeleteButton>
+                            <PrimaryButton disabled={processing} onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                            <DeleteButton disabled={processing} onClick={deletePermission}>delete</DeleteButton>
                         </div>
                     </div>
                 )}

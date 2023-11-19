@@ -17,6 +17,8 @@ use App\DTOs\ProductDTO;
 use App\Models\Product;
 use App\Actions\Product\EnsureUserCanCreateProductAction;
 use App\Actions\Product\EnsureUserCanUpdateProductAction;
+use App\DTOs\ActivityDTO;
+use App\Enums\ActivityActionEnum;
 
 class ProductService extends BaseService
 {
@@ -42,6 +44,14 @@ class ProductService extends BaseService
                 fileDTO: $fileDTO, fileable: $product
             );
 
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $productDTO->user,
+                "itemable" => $product,
+                "action" => ActivityActionEnum::CREATED->value
+            ])
+        );
+        
         return $product;
     }
 
@@ -76,7 +86,17 @@ class ProductService extends BaseService
             );
         } 
 
-        return UpdateProductAction::make()->execute($productDTO);
+        $product = UpdateProductAction::make()->execute($productDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $productDTO->user,
+                "itemable" => $product,
+                "action" => ActivityActionEnum::UPDATED->value
+            ])
+        );
+        
+        return $product;
     }
 
     public function deleteProduct(ProductDTO $productDTO) : bool
@@ -94,6 +114,14 @@ class ProductService extends BaseService
         EnsureUserCanUpdateProductAction::make()->execute($productDTO);
 
         DeleteFileAction::make()->execute(fileable: $productDTO->product);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $productDTO->user,
+                "itemable" => $productDTO->product,
+                "action" => ActivityActionEnum::DELETED->value
+            ])
+        );
 
         return DeleteProductAction::make()->execute($productDTO);
     }

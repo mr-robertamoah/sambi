@@ -18,6 +18,7 @@ import getDate from '@/Helpers/getDate';
 import getDiscountText from '@/Helpers/getDiscountText';
 import calculateByDiscount from '@/Helpers/calculateByDiscount';
 import addCurrency from '@/Helpers/addCurrency';
+import can from '@/Helpers/can';
 
 export default function Index({ auth, sales, users, products, discounts, filtered, filteredData }) {
 
@@ -28,7 +29,7 @@ export default function Index({ auth, sales, users, products, discounts, filtere
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
         product_id: '',
         discount_id: '',
         number_of_units: '',
@@ -62,7 +63,7 @@ export default function Index({ auth, sales, users, products, discounts, filtere
 
     useEffect(() => {
         setBuyers([...(
-            sales.data.map(sale => sale.buyerName)
+            sales.data?.map(sale => sale.buyerName)
         )])
     }, [])
 
@@ -80,13 +81,13 @@ export default function Index({ auth, sales, users, products, discounts, filtere
 
     useEffect(function () {
 
-        if (filterBy == "user_id") setFilterData(users.data.map(user => {
+        if (filterBy == "user_id") setFilterData(users.data?.map(user => {
             return {key: user.name, value: user.id}
         }))
-        if (filterBy == "product_id") setFilterData(products.data.map(product => {
+        if (filterBy == "product_id") setFilterData(products.data?.map(product => {
             return {key: product.name, value: product.id}
         }))
-        if (filterBy == "discount_id") setFilterData(discounts.data.map(discount => {
+        if (filterBy == "discount_id") setFilterData(discounts.data?.map(discount => {
             return {key: discount.name, value: discount.id}
         }))
         if (filterBy == "buyer_name") setFilterData(buyers.map(buyer => {
@@ -212,7 +213,7 @@ export default function Index({ auth, sales, users, products, discounts, filtere
     }
 
     function deleteSale() {
-        router.delete(route("sale.delete", modalData.id), {
+        routerDelete(route("sale.delete", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} sale item has been successfully deleted.`)
@@ -251,14 +252,14 @@ export default function Index({ auth, sales, users, products, discounts, filtere
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
                 <div className="text-sm text-gray-600">{sales.meta?.total} sale entr{sales.meta?.total == 1 ? "y" : "ies"}</div>
-                {products.data.length ? <PrimaryButton onClick={newSale}>new</PrimaryButton> :
+                {can(auth.user?.data, "create", "sales") && (products.data?.length ? <PrimaryButton onClick={newSale}>new</PrimaryButton> :
                     <Link
                         href={route('cost_item.index')}
                         className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
-                        got to products to create at least one
+                        go to products to create at least one
                     </Link>
-                }
+                )}
             </div>
 
             <div ref={tableDiv} className={`px-6 py-12 w-full block overflow-x-auto`}>
@@ -285,6 +286,7 @@ export default function Index({ auth, sales, users, products, discounts, filtere
                         {func: (item) => editSale(item), disabled: (item) => processing, className: "bg-blue-600", text: "edit"},
                         {func: (item) => removeSale(item), disabled: (item) => processing, className: "bg-red-600 hover:bg-red-500 active:bg-red-700 focus:bg-red-500 focus:ring-red-500", text: "delete"}
                     ]}
+                    disableActions={item => !can(auth.user?.data, "update", "sales", item.user)}
                 >
                     {filtered && <div className="w-full flex justify-start items-center my-2">
                         <div className="text-sm capitalize text-start shrink-0">filters: </div>
@@ -296,11 +298,11 @@ export default function Index({ auth, sales, users, products, discounts, filtere
                             {data.product_id && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
                                 data.product_id = ""
                                 getSales()
-                            }}>filtered by {products.data.find(u => u.id == data.product_id).name} product</Badge>}
+                            }}>filtered by {products.data?.find(u => u.id == data.product_id).name} product</Badge>}
                             {data.discount_id && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
                                 data.discount_id = ""
                                 getSales()
-                            }}>filtered by {discounts.data.find(u => u.id == data.discount_id).name} discount</Badge>}
+                            }}>filtered by {discounts.data?.find(u => u.id == data.discount_id).name} discount</Badge>}
                             {data.date && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
                                 data.date = ""
                                 getSales()
@@ -313,7 +315,7 @@ export default function Index({ auth, sales, users, products, discounts, filtere
                             {data.user_id && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
                                 data.user_id = ""
                                 getSales()
-                            }}>filtered by {users.data.find(u => u.id == data.user_id).name}</Badge>}
+                            }}>filtered by {users.data?.find(u => u.id == data.user_id).name}</Badge>}
                         </div>
                     </div>}
                     <div className="w-full flex justify-start items-center text-sm text-gray-600 font-normal">
@@ -558,8 +560,8 @@ export default function Index({ auth, sales, users, products, discounts, filtere
                     <div className="mx-auto w-4/5 text-center mb-3">
                         <div className="text-gray-600">Are you sure you want to delete sale associated with <span className="capitalize font-semibold">{modalData.name}</span> product</div>
                         <div className="flex justify-between items-center mt-3">
-                            <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deleteSale}>delete</DeleteButton>
+                            <PrimaryButton disabled={processing} onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                            <DeleteButton disabled={processing} onClick={deleteSale}>delete</DeleteButton>
                         </div>
                     </div>
                 )}

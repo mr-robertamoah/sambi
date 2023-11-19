@@ -13,19 +13,23 @@ import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import can from '@/Helpers/can';
 
-export default function Index({ auth, discounts }) {
+export default function Index({ auth, discounts, users, permission }) {
 
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
+        assignee_id: '',
         name: '',
+        permission_ids: [],
         description: '',
         amount: '',
         type: '',
     });
     let newData = {
+        userId: '',
         id: '',
         name: '',
         description: '',
@@ -45,6 +49,10 @@ export default function Index({ auth, discounts }) {
         if (errors.failed && openModal) errors.failed = null
         
     }, [openModal])
+
+    useEffect(function () {
+        if (permission?.data) setData("permission_ids", [permission?.data.id])
+    }, [permission])
 
     function toggleModal() {
         setOpenModal(!openModal)
@@ -97,7 +105,8 @@ export default function Index({ auth, discounts }) {
         setModalData((prev) => {
             let d = {...prev}
             d[key] = value
-            setData(key, value)
+            if (key == "userId") setData("assignee_id", value)
+            else setData(key, value)
             return d
         })
     }
@@ -122,12 +131,25 @@ export default function Index({ auth, discounts }) {
     }
 
     function deleteDiscount() {
-        router.delete(route("discount.delete", modalData.id), {
+        routerDelete(route("discount.delete", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} discount has been successfully deleted.`)
             }
         })
+    }
+    
+    function assignPermission() {
+        let usersName = users.data.find(user => user.id == data.assignee_id)?.name
+        post(route("user.permissions.update", auth.user.data?.id), {
+        onSuccess: (res) => {
+            setSuccess(`${usersName} has successfully being assigned permission to apply discounts. To remove permission, go to users or permissions.`)
+            users.data = [...users.data.filter(user => user.id != data.assignee_id)]
+            updateData("userId", "")
+        },
+        onError: (e) => {
+            console.error(e, "sync")
+        }})
     }
 
     return (
@@ -139,11 +161,17 @@ export default function Index({ auth, discounts }) {
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
                 <div className="text-sm text-gray-600">{discounts.meta?.total ?? 0} discount{discounts.meta?.total == 1 ? "" : "s"}</div>
-                <PrimaryButton onClick={newDiscount}>new</PrimaryButton>
+                <div>
+                    <PrimaryButton className='mr-2' onClick={newDiscount}>new</PrimaryButton>
+                    {(discounts.meta?.total > 0 && can(auth.user?.data, "assign", "permissions") && users.data?.length) && <PrimaryButton onClick={() => {
+                        setAction("assign")
+                        setOpenModal(true)
+                    }}>assign permission</PrimaryButton>}
+                </div>
             </div>
 
             <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${discounts.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
-                {discounts.meta?.total ? discounts.data.map((discount) =>(<DiscountCard
+                {discounts.meta?.total ? discounts.data?.map((discount) =>(<DiscountCard
                     key={discount.id}
                     discount={discount}
                     onDblClick={(e) => editDiscount(discount)}
@@ -166,6 +194,7 @@ export default function Index({ auth, discounts }) {
                 show={openModal}
                 onClose={toggleModal}
             >
+                <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 uppercase">{action} Discount</div>
                 <Alert
                     show={errors.failed || success}
                     type={success ? "success" : "failed"}
@@ -174,10 +203,13 @@ export default function Index({ auth, discounts }) {
                     }}
                 >{success ?? errors.failed}</Alert>
                 {processing && (<div className={`w-full text-center flex rounded-full mt-4 mb-2 justify-center items-center ${action != "delete" ? "text-green-600" : "text-red-600"}`}>
-                    <div className={`mr-2 animate-ping w-3 h-3 ${action != "delete" ? "bg-green-400" : "bg-red-400"}`}></div> {action == "create" ? "creating" : action == "edit" ? "editing" : "deleting"}...
+                    <div className={`mr-2 animate-ping w-3 h-3 ${action != "delete" ? "bg-green-400" : "bg-red-400"}`}></div> {
+                        action == "create" ? "creating" : 
+                        action == "edit" ? "editing" :  
+                        action == "assign" ? "assigning" : "deleting"
+                    }...
                 </div>)}
-                <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 uppercase">{action} Discount</div>
-                {action != "delete" && (<form encType="multipart/form-data" className="mx-auto p-2 max-w-md" onSubmit={submit}>
+                {["create", "edit"].includes(action) && (<form className="mx-auto p-2 max-w-md" onSubmit={submit}>
                     <div>
                         <InputLabel htmlFor="name" value="Name" />
 
@@ -216,7 +248,7 @@ export default function Index({ auth, discounts }) {
                             }}
                         />
 
-                        <InputError message={errors.product_id} className="mt-2" />
+                        <InputError message={errors.type} className="mt-2" />
                     </div>
 
                     <div className="mt-4">
@@ -258,12 +290,48 @@ export default function Index({ auth, discounts }) {
                         </PrimaryButton>
                     </div>
                 </form>)}
+                {"assign" == action && (<form encType="multipart/form-data" className="mx-auto p-2 max-w-md" onSubmit={submit}>
+                    {data.assignee_id && <div className='text-sm my-4 text-gray-600 text-center'>
+                        you are trying to assign <span className='font-semibold'>{users.data.find(user => user.id == data.assignee_id)?.name}</span> the permission to APPLY DISCOUNTS on sales
+                    </div>}
+                    <div className="mt-4">
+                        <InputLabel htmlFor="user" value="User" />
+
+                        <Select
+                            id="user"
+                            type="text"
+                            name="user"
+                            value={modalData.userId}
+                            placeholder="select user"
+                            optionKey="name"
+                            valueKey="id"
+                            options={users.data ?? []}
+                            className="mt-1 block w-full"
+                            onChange={(e) => {
+                                clearErrors("assignee_id")
+                                updateData('userId', e.target.value)
+                            }}
+                        />
+
+                        <InputError message={errors.assignee_id} className="mt-2" />
+                    </div>
+
+                    <div className="flex items-center justify-end mt-4">
+                        
+                        <PrimaryButton className="ml-4 mb-4" 
+                            disabled={processing || (action == "edit" && !(!!data.assignee_id))}
+                            onClick={assignPermission}
+                        >
+                            {action}
+                        </PrimaryButton>
+                    </div>
+                </form>)}
                 {action == "delete" && (
                     <div className="mx-auto w-4/5 text-center mb-3">
                         <div className="text-gray-600">Are you sure you want to delete <span className="capitalize font-semibold">{modalData.name}</span> discount</div>
                         <div className="flex justify-between items-center mt-3">
-                            <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deleteDiscount}>delete</DeleteButton>
+                            <PrimaryButton disabled={processing} onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                            <DeleteButton disabled={processing} onClick={deleteDiscount}>delete</DeleteButton>
                         </div>
                     </div>
                 )}

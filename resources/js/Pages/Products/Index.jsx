@@ -10,6 +10,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import ProductCard from '@/Components/ProductCard';
 import TextBox from '@/Components/TextBox';
 import TextInput from '@/Components/TextInput';
+import can from '@/Helpers/can';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
@@ -106,7 +107,7 @@ export default function Index({ auth, products }) {
             if (key == "file") {
                 if (value) d["src"] = URL.createObjectURL(value)
                 else {
-                    data.file_id = products.data.find(p => p.id == modalData.id).image?.id
+                    data.file_id = products.data?.find(p => p.id == modalData.id).image?.id
                     d["src"] = null
                 }
             }
@@ -131,7 +132,7 @@ export default function Index({ auth, products }) {
         post(route("product.update", modalData.id), {
             onSuccess: (res) => {
                 reset()
-                setData("file_id", res.props.products.data.find(p => p.id == modalData.id)?.image?.id)
+                setData("file_id", res.props.products.data?.find(p => p.id == modalData.id)?.image?.id)
                 setSuccess(`${modalData.name} product has been successfully updated.`)
             }
         })
@@ -155,11 +156,11 @@ export default function Index({ auth, products }) {
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
                 <div className="text-sm text-gray-600">{products.meta?.total} product{products.meta?.total == 1 ? "" : "s"}</div>
-                <PrimaryButton onClick={newProduct}>new</PrimaryButton>
+                {can(auth.user?.data, "create", "products") && <PrimaryButton onClick={newProduct}>new</PrimaryButton>}
             </div>
 
             <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${products.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
-                {products.meta?.total ? products.data.map((product) =>(<ProductCard
+                {products.meta?.total ? products.data?.map((product) =>(<ProductCard
                     key={product.id}
                     product={product}
                     onDblClick={(e) => editProduct(product)}
@@ -268,7 +269,7 @@ export default function Index({ auth, products }) {
                             keepFile={() => {
                                 clearErrors("file")
                                 data.file_id = null
-                                updateModelData("src", products.data.find(p => p.id == modalData.id).image?.src)
+                                updateModelData("src", products.data?.find(p => p.id == modalData.id).image?.src)
                             }}
                             // getFileOnDelete={action == "edit" ? true : false}
                         ></FileInput>
@@ -296,8 +297,8 @@ export default function Index({ auth, products }) {
                     <div className="mx-auto w-4/5 text-center mb-3">
                         <div className="text-gray-600">Are you sure you want to delete <span className="capitalize font-semibold">{modalData.name}</span> product</div>
                         <div className="flex justify-between items-center mt-3">
-                            <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deleteProduct}>delete</DeleteButton>
+                            <PrimaryButton disabled={processing} onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                            <DeleteButton disabled={processing} onClick={deleteProduct}>delete</DeleteButton>
                         </div>
                     </div>
                 )}

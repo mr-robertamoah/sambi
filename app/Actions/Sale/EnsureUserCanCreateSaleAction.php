@@ -15,6 +15,7 @@ class EnsureUserCanCreateSaleAction extends Action
             $saleDTO->user->isPermittedTo(names: [
                 PermissionEnum::CAN_MANAGE_ALL->value,
                 PermissionEnum::CAN_MANAGE_SALE->value,
+                PermissionEnum::CAN_MAKE_SALE_ENTRY->value,
             ])
         ) return;
 

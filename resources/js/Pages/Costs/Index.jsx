@@ -15,6 +15,7 @@ import Table from '@/Components/Table';
 import ActionButton from '@/Components/ActionButton';
 import Badge from '@/Components/Badge';
 import getDate from '@/Helpers/getDate';
+import can from '@/Helpers/can';
 
 export default function Index({ auth, costs, users, costItems, filtered, filteredData }) {
 
@@ -24,7 +25,7 @@ export default function Index({ auth, costs, users, costItems, filtered, filtere
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
         cost_item_id: '',
         number_of_units: '',
         date: "",
@@ -63,13 +64,10 @@ export default function Index({ auth, costs, users, costItems, filtered, filtere
     }, [openModal])
 
     useEffect(function () {
-        // reset()
-        // setRefresh(false)
-
-        if (filterBy == "user_id") setFilterData(users.data.map(user => {
+        if (filterBy == "user_id") setFilterData(users.data?.map(user => {
             return {key: user.name, value: user.id}
         }))
-        if (filterBy == "cost_item_id") setFilterData(costItems.data.map(costItem => {
+        if (filterBy == "cost_item_id") setFilterData(costItems.data?.map(costItem => {
             return {key: costItem.name, value: costItem.id}
         }))
     }, [filterBy])
@@ -178,7 +176,7 @@ export default function Index({ auth, costs, users, costItems, filtered, filtere
     }
 
     function deleteCost() {
-        router.delete(route("cost.delete", modalData.id), {
+        routerDelete(route("cost.delete", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} cost item has been successfully deleted.`)
@@ -213,14 +211,14 @@ export default function Index({ auth, costs, users, costItems, filtered, filtere
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
                 <div className="text-sm text-gray-600">{costs.meta?.total} cost entr{costs.meta?.total == 1 ? "y" : "ies"}</div>
-                {costItems.data.length ? <PrimaryButton onClick={newCost}>new</PrimaryButton> :
+                {can(auth.user?.data, "create", "costs") && (costItems.data?.length ? <PrimaryButton onClick={newCost}>new</PrimaryButton> :
                     <Link
                         href={route('cost_item.index')}
                         className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
-                        got to cost items to create at least one
+                        go to cost items to create at least one
                     </Link>
-                }
+                )}
             </div>
 
             <div ref={tableDiv} className={`px-6 py-12 w-full block overflow-x-auto`}>
@@ -235,11 +233,17 @@ export default function Index({ auth, costs, users, costItems, filtered, filtere
                     rowClassName={`text-green-800 font-semibold`}
                     rowDataKeys={[
                         "costItem.name", 
-                        (item) => `GHȻ ${item.costItem.unitCharge}`, "costItem.unit", "numberOfUnits",, (item) => `GHȻ ${item.numberOfUnits * item.costItem.unitCharge}`, "dateForHumans"]}
+                        (item) => `GHȻ ${item.costItem.unitCharge}`,
+                        "costItem.unit", 
+                        "numberOfUnits",
+                        (item) => `GHȻ ${item.numberOfUnits * item.costItem.unitCharge}`,
+                        "dateForHumans"
+                    ]}
                     actions={[
                         {func: (item) => editCost(item), disabled: (item) => processing, className: "bg-blue-600", text: "edit"},
                         {func: (item) => removeCost(item), disabled: (item) => processing, className: "bg-red-600 hover:bg-red-500 active:bg-red-700 focus:bg-red-500 focus:ring-red-500", text: "delete"}
                     ]}
+                    disableActions={item => !can(auth.user?.data, "update", "costs", item.user)}
                 >
                     {filtered && <div className="w-full flex justify-start items-center my-2">
                         <div className="text-sm capitalize text-start shrink-0">filters: </div>
@@ -247,7 +251,7 @@ export default function Index({ auth, costs, users, costItems, filtered, filtere
                             {data.cost_item_id && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
                                 data.cost_item_id = ""
                                 getCosts()
-                            }}>filtered by {costItems.data.find(u => u.id == data.cost_item_id).name} cost item</Badge>}
+                            }}>filtered by {costItems.data?.find(u => u.id == data.cost_item_id).name} cost item</Badge>}
                             {data.date && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
                                 data.date = ""
                                 getCosts()
@@ -260,7 +264,7 @@ export default function Index({ auth, costs, users, costItems, filtered, filtere
                             {data.user_id && <Badge className='mx-2 text-white bg-slate-900 p-1 text-sm lowercase' onClose={() => {
                                 data.user_id = ""
                                 getCosts()
-                            }}>filtered by {users.data.find(u => u.id == data.user_id).name}</Badge>}
+                            }}>filtered by {users.data?.find(u => u.id == data.user_id).name}</Badge>}
                         </div>
                     </div>}
                     <div className="w-full flex justify-start items-center text-sm text-gray-600 font-normal">
@@ -456,8 +460,8 @@ export default function Index({ auth, costs, users, costItems, filtered, filtere
                     <div className="mx-auto w-4/5 text-center mb-3">
                         <div className="text-gray-600">Are you sure you want to delete cost associated with <span className="capitalize font-semibold">{modalData.name}</span> cost item</div>
                         <div className="flex justify-between items-center mt-3">
-                            <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deleteCost}>delete</DeleteButton>
+                            <PrimaryButton disabled={processing} onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                            <DeleteButton disabled={processing} onClick={deleteCost}>delete</DeleteButton>
                         </div>
                     </div>
                 )}

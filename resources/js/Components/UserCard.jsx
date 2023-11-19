@@ -1,15 +1,23 @@
+import can from "@/Helpers/can"
 import DeleteButton from "./DeleteButton"
-import Image from "./Image"
 import ProfilePicture from "./ProfilePicture"
+import { useEffect, useState } from "react"
+import { usePage } from "@inertiajs/react"
 
-export default function UserCard({onDblClick = null, user, onDelete = null, ...props}) {
+export default function UserCard({onDblClick = null, user, authUser, onDelete = null, ...props}) {
+    
+    let [canDelete, setCanDelete] = useState(false)
 
     if (!user) {
         return (<></>)
     }
 
+    useEffect(() => {
+        setCanDelete(can(authUser, "delete", "users"))
+    }, [])
+
     function clicked(event) {
-        if (event.detail == 2 && onDblClick) {
+        if (event.detail == 2 && onDblClick && canDelete) {
             onDblClick(event)
         }
     }
@@ -39,7 +47,7 @@ export default function UserCard({onDblClick = null, user, onDelete = null, ...p
                 <p className="text-center text-gray-600 text-sm py-2">{user.email}</p>
                 <div className="absolute top-1 right-1 mt-2 mr-2 text-end text-gray-600 text-sm">{user.permissions.length} permission{user.permissions.length == 1 ? "" : "s"}</div>
             </div>
-            {onDelete && <div className="flex justify-end text-sm my-2 mr-2">
+            {(onDelete && canDelete) && <div className="flex justify-end text-sm my-2 mr-2">
                 <DeleteButton title={`delete ${user.name} user`} onClick={deleteUser}>delete</DeleteButton>
             </div>}
         </div>

@@ -13,6 +13,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import Select from '@/Components/Select';
+import can from '@/Helpers/can';
 
 export default function Index({ auth, costItems }) {
 
@@ -20,7 +21,7 @@ export default function Index({ auth, costItems }) {
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
         name: '',
         description: '',
         category_id: '',
@@ -132,7 +133,7 @@ export default function Index({ auth, costItems }) {
     }
 
     function deleteCostItem() {
-        router.delete(route("cost_item.delete", modalData.id), {
+        routerDelete(route("cost_item.delete", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} cost item has been successfully deleted.`)
@@ -144,7 +145,7 @@ export default function Index({ auth, costItems }) {
         axios.get(route("category.index") + `?no_permissions=${true}`)
             .then((res) => {
                 console.log(res, "get categories")
-                setCategories([...res.data.categories])
+                setCategories([...res.data?.categories])
             })
     }
 
@@ -157,18 +158,18 @@ export default function Index({ auth, costItems }) {
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
                 <div className="text-sm text-gray-600">{costItems.meta?.total} cost item{costItems.meta?.total == 1 ? "" : "s"}</div>
-                {categories.length ? <PrimaryButton onClick={newCostItem}>new</PrimaryButton> :
+                {can(auth.user?.data, "create", "costItems") && (categories.length ? <PrimaryButton onClick={newCostItem}>new</PrimaryButton> :
                     <Link
                         href={route('category.index')}
                         className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
-                        got to categories to create at least one
+                        go to categories to create at least one
                     </Link>
-                }
+                )}
             </div>
 
             <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${costItems.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
-                {costItems.meta?.total ? costItems.data.map((costItem) =>(<CostItemCard
+                {costItems.meta?.total ? costItems.data?.map((costItem) =>(<CostItemCard
                     key={costItem.id}
                     costItem={costItem}
                     onDblClick={(e) => editCostItem(costItem)}
@@ -219,6 +220,27 @@ export default function Index({ auth, costItems }) {
                         />
 
                         <InputError message={errors.name} className="mt-2" />
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="category" value="Category" />
+
+                        <Select
+                            id="category"
+                            type="text"
+                            name="category"
+                            value={modalData.categoryId}
+                            placeholder="select category"
+                            optionKey="name"
+                            valueKey="id"
+                            options={categories}
+                            className="mt-1 block w-full"
+                            onChange={(e) => {
+                                clearErrors("category_id")
+                                updateModelData('categoryId', e.target.value)}}
+                        />
+
+                        <InputError message={errors.category_id} className="mt-2" />
                     </div>
 
                     <div className="mt-4">
@@ -277,27 +299,6 @@ export default function Index({ auth, costItems }) {
                         </div>
                     </div>
 
-                    <div className="mt-4">
-                        <InputLabel htmlFor="category" value="Category" />
-
-                        <Select
-                            id="category"
-                            type="text"
-                            name="category"
-                            value={modalData.categoryId}
-                            placeholder="select category"
-                            optionKey="name"
-                            valueKey="id"
-                            options={categories}
-                            className="mt-1 block w-full"
-                            onChange={(e) => {
-                                clearErrors("category_id")
-                                updateModelData('categoryId', e.target.value)}}
-                        />
-
-                        <InputError message={errors.category_id} className="mt-2" />
-                    </div>
-
                     <div className="flex items-center justify-end mt-4">
                         
                         <PrimaryButton className="ml-4 mb-4" 
@@ -311,8 +312,8 @@ export default function Index({ auth, costItems }) {
                     <div className="mx-auto w-4/5 text-center mb-3">
                         <div className="text-gray-600">Are you sure you want to delete <span className="capitalize font-semibold">{modalData.name}</span> cost item</div>
                         <div className="flex justify-between items-center mt-3">
-                            <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deleteCostItem}>delete</DeleteButton>
+                            <PrimaryButton disabled={processing} onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                            <DeleteButton disabled={processing} onClick={deleteCostItem}>delete</DeleteButton>
                         </div>
                     </div>
                 )}

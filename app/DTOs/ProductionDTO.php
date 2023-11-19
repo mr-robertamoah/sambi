@@ -2,12 +2,22 @@
 
 namespace App\DTOs;
 
+use App\Models\Product;
+use App\Models\Production;
+use App\Models\User;
 use Illuminate\Http\Request;
 use MrRobertAmoah\DTO\BaseDTO;
 
 class ProductionDTO extends BaseDTO
 {
-    //set properties that correspond with request inputs
+    public ?User $user = null;
+    public ?Product $product = null;
+    public ?Production $production = null;
+    public string|int|null $productId = null;
+    public string|int|null $productionId = null;
+    public string|null $date = null;
+    public string|null $note = null;
+    public string|int|null $quantity = null;
     
     /**
      * assign data (filled or validated) to the dto properties as an 

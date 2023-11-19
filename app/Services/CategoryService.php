@@ -10,7 +10,9 @@ use App\Actions\Category\EnsureUserCanCreateCategoryAction;
 use App\Actions\Category\EnsureUserCanUpdateCategoryAction;
 use App\Actions\Category\UpdateCategoryAction;
 use App\Actions\GetModelFromDTOAction;
+use App\DTOs\ActivityDTO;
 use App\DTOs\CategoryDTO;
+use App\Enums\ActivityActionEnum;
 
 class CategoryService extends BaseService
 {
@@ -20,7 +22,17 @@ class CategoryService extends BaseService
 
         EnsureUserCanCreateCategoryAction::make()->execute($categoryDTO);
 
-        return CreateCategoryAction::make()->execute($categoryDTO);
+        $category = CreateCategoryAction::make()->execute($categoryDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $categoryDTO->user,
+                "itemable" => $category,
+                "action" => ActivityActionEnum::CREATED->value
+            ])
+        );
+
+        return $category;
     }
 
     public function updateCategory(CategoryDTO $categoryDTO)
@@ -37,7 +49,17 @@ class CategoryService extends BaseService
 
         EnsureUserCanUpdateCategoryAction::make()->execute($categoryDTO);
 
-        return UpdateCategoryAction::make()->execute($categoryDTO);
+        $category = UpdateCategoryAction::make()->execute($categoryDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $categoryDTO->user,
+                "itemable" => $category,
+                "action" => ActivityActionEnum::UPDATED->value
+            ])
+        );
+        
+        return $category;
     }
 
     public function deleteCategory(CategoryDTO $categoryDTO) : bool
@@ -53,6 +75,14 @@ class CategoryService extends BaseService
         EnsureCategoryExistsAction::make()->execute($categoryDTO);
 
         EnsureUserCanUpdateCategoryAction::make()->execute($categoryDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $categoryDTO->user,
+                "itemable" => $categoryDTO->category,
+                "action" => ActivityActionEnum::DELETED->value
+            ])
+        );
 
         return DeleteCategoryAction::make()->execute($categoryDTO);
     }

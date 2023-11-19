@@ -1,13 +1,22 @@
+import can from "@/Helpers/can"
 import DeleteButton from "./DeleteButton"
+import { usePage } from "@inertiajs/react"
+import { useEffect, useState } from "react"
 
 export default function CategoryCard({onDblClick = null, category, onDelete = null, ...props}) {
+    let user = usePage().props.auth.user?.data
+    let [canUpdate, setCanUpdate] = useState(false)
 
     if (!category) {
         return (<></>)
     }
 
+    useEffect(() => {
+        setCanUpdate(can(user, "update", "categories", category.user))
+    }, [])
+
     function clicked(event) {
-        if (event.detail == 2 && onDblClick) {
+        if (event.detail == 2 && onDblClick && canUpdate) {
             onDblClick(event)
         }
     }
@@ -32,7 +41,7 @@ export default function CategoryCard({onDblClick = null, category, onDelete = nu
                     <div className="">added by {category.user.name}</div>
                     <div>{category.createdAt}</div>
                 </div>
-                <DeleteButton title={`delete ${category.name} cost item`} onClick={deleteCategory}>delete</DeleteButton>
+                {canUpdate && <DeleteButton title={`delete ${category.name} cost item`} onClick={deleteCategory}>delete</DeleteButton>}
             </div>
         </div>
     )

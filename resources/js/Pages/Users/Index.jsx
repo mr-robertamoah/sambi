@@ -42,7 +42,7 @@ export default function Index({ auth, users }) {
 
     useEffect(() => {
         setExistingPermissions(()=>{
-            let u = users.data.find(u => u.id == modalData.id)
+            let u = users.data?.find(u => u.id == modalData.id)
 
             return u?.permissions ? [...u.permissions] : []
         })
@@ -95,7 +95,7 @@ export default function Index({ auth, users }) {
 
     function syncPermissions() {
         setProcessing(true)
-        router.post(route("user.permissions.update", auth.user.data.id), 
+        router.post(route("user.permissions.update", auth.user.data?.id), 
         {
             "permission_ids": [
                 ...addedPermissions.map(perm => perm.id),
@@ -111,16 +111,13 @@ export default function Index({ auth, users }) {
         onError: (e) => {
             console.error(e, "sync")
             setErrors(() => {
-                return {failed: e.response.data.message}
+                return {failed: e.response.data?.message}
             })
         },
         onFinish: () => {
             setProcessing(false)
             setAddedPermissions([])
             setRemovedPermissions([])
-            // setTimeout(() => {
-            //     setOpenModal(false)
-            // }, 400)
         }})
     }
 
@@ -148,13 +145,13 @@ export default function Index({ auth, users }) {
         setSearching(true)
         axios.get(route("permissions.get") + `?assignee_id=${id}`)
         .then((res) => {
-                setPermissions(res.data ? res.data.permissions.data : [])
+                setPermissions(res.data ? res.data?.permissions.data : [])
                 setProcessing(false)
             })
         .catch((e) => {
                 console.error(e, "getPermissions")
                 setErrors(() => {
-                    return {failed: e.response.data.message}
+                    return {failed: e.response.data?.message}
                 })
             }
         )
@@ -175,9 +172,10 @@ export default function Index({ auth, users }) {
             </div>
 
             <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${users.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
-                {users.meta?.total ? users.data.map((user) =>(<UserCard
+                {users.meta?.total ? users.data?.map((user) =>(<UserCard
                     key={user.id}
                     user={user}
+                    authUser={auth.user?.data}
                     title={`double click to view ${user.name} user`}
                     onDblClick={(e) => viewUser(user)}
                     onDelete={can(auth.user?.data, "delete", "users") ? (e) => removeUser(user) : null}
@@ -310,6 +308,11 @@ export default function Index({ auth, users }) {
                             </div>
                         </>)}
                         </form>
+
+                        {can(auth.user?.data, "manage", "users") && <div>
+                            <div>activities section</div>
+                        </div>} 
+                        {/* TODO */}
                     </div>)}
                     {action == "delete" && (
                         <div className="mx-auto w-4/5 text-center mb-3">
@@ -317,8 +320,7 @@ export default function Index({ auth, users }) {
                             <p className="text-sm text-red-400 my-2">Once the account is deleted, all of its resources and data will be permanently deleted.</p>
                             <div className="flex justify-between items-center mt-3">
                                 <PrimaryButton 
-                                    disabled={processing}
-                                    onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                                    disabled={processing} onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
                                 <DeleteButton 
                                     disabled={processing}
                                     onClick={deleteUser}>delete</DeleteButton>

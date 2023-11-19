@@ -14,6 +14,7 @@ class EnsureUserCanCreateProductAction extends Action
             $productDTO->user->isPermittedTo(names: [
                 PermissionEnum::CAN_MANAGE_ALL->value,
                 PermissionEnum::CAN_MANAGE_PRODUCT->value,
+                PermissionEnum::CAN_MAKE_PRODUCTION_ENTRY->value,
             ])
         ) return;
 

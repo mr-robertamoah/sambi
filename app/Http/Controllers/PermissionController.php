@@ -135,15 +135,17 @@ class PermissionController extends Controller
                 ])
             );
             
-            $permissionAssigned = $assignee->refresh()
-                        ->assignedPermissions()
-                        ->wherePivotIn("permission_id", $request->permission_ids)
-                        ->latest()->first();
-                        
-            if ($wantsJson) return response()->json([
-                "success" => "Permissions have been successfully synced.",
-                "assigned" => $permissionAssigned ? new AssignedUserResource($permissionAssigned) : null
-            ]);
+            if ($wantsJson) {
+                $permissionAssigned = $assignee->refresh()
+                    ->assignedPermissions()
+                    ->wherePivotIn("permission_id", $request->permission_ids)
+                    ->latest()->first();
+                            
+                return response()->json([
+                    "success" => "Permissions have been successfully synced.",
+                    "assigned" => $permissionAssigned ? new AssignedUserResource($permissionAssigned) : null
+                ]);
+            }
 
             return Redirect::back()->with("success","Permissions have been successfully synced.");
         } catch (\Throwable $th) {

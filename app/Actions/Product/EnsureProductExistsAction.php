@@ -4,12 +4,13 @@ namespace App\Actions\Product;
 
 use App\Actions\Action;
 use App\DTOs\ProductDTO;
+use App\DTOs\ProductionDTO;
 use App\DTOs\SaleDTO;
 use App\Exceptions\ProductException;
 
 class EnsureProductExistsAction extends Action
 {
-    public function execute(ProductDTO|SaleDTO $productDTO)
+    public function execute(ProductDTO|SaleDTO|ProductionDTO $productDTO)
     {
         if ($productDTO->product) return;
 

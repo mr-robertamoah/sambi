@@ -11,7 +11,9 @@ use App\Actions\Cost\UpdateCostAction;
 use App\Actions\CostItem\EnsureCostItemExistsAction;
 use App\Actions\EnsureUserExistsAction;
 use App\Actions\GetModelFromDTOAction;
+use App\DTOs\ActivityDTO;
 use App\DTOs\CostDTO;
+use App\Enums\ActivityActionEnum;
 
 class CostService extends BaseService
 {
@@ -29,7 +31,17 @@ class CostService extends BaseService
 
         EnsureUserCanCreateCostAction::make()->execute($costDTO);
 
-        return CreateCostAction::make()->execute($costDTO);
+        $cost = CreateCostAction::make()->execute($costDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $costDTO->user,
+                "itemable" => $cost,
+                "action" => ActivityActionEnum::CREATED->value
+            ])
+        );
+        
+        return $cost;
     }
 
     public function updateCost(CostDTO $costDTO)
@@ -56,7 +68,17 @@ class CostService extends BaseService
 
         EnsureUserCanUpdateCostAction::make()->execute($costDTO);
 
-        return UpdateCostAction::make()->execute($costDTO);
+        $cost = UpdateCostAction::make()->execute($costDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $costDTO->user,
+                "itemable" => $cost,
+                "action" => ActivityActionEnum::UPDATED->value
+            ])
+        );
+        
+        return $cost;
     }
 
     public function deleteCost(CostDTO $costDTO) : bool
@@ -72,6 +94,14 @@ class CostService extends BaseService
         EnsureCostExistsAction::make()->execute($costDTO);
 
         EnsureUserCanUpdateCostAction::make()->execute($costDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $costDTO->user,
+                "itemable" => $costDTO->cost,
+                "action" => ActivityActionEnum::DELETED->value
+            ])
+        );
 
         return DeleteCostAction::make()->execute($costDTO);
     }

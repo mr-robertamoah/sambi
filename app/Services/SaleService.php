@@ -12,7 +12,9 @@ use App\Actions\Sale\UpdateSaleAction;
 use App\Actions\EnsureUserExistsAction;
 use App\Actions\GetModelFromDTOAction;
 use App\Actions\Product\EnsureProductExistsAction;
+use App\DTOs\ActivityDTO;
 use App\DTOs\SaleDTO;
+use App\Enums\ActivityActionEnum;
 
 class SaleService extends BaseService
 {
@@ -40,7 +42,17 @@ class SaleService extends BaseService
 
         EnsureUserCanCreateSaleAction::make()->execute($saleDTO);
 
-        return CreateSaleAction::make()->execute($saleDTO);
+        $sale = CreateSaleAction::make()->execute($saleDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $saleDTO->user,
+                "itemable" => $sale,
+                "action" => ActivityActionEnum::CREATED->value
+            ])
+        );
+        
+        return $sale;
     }
 
     public function updateSale(SaleDTO $saleDTO)
@@ -77,7 +89,17 @@ class SaleService extends BaseService
 
         EnsureUserCanUpdateSaleAction::make()->execute($saleDTO);
 
-        return UpdateSaleAction::make()->execute($saleDTO);
+        $sale = UpdateSaleAction::make()->execute($saleDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $saleDTO->user,
+                "itemable" => $sale,
+                "action" => ActivityActionEnum::UPDATED->value
+            ])
+        );
+        
+        return $sale;
     }
 
     public function deleteSale(SaleDTO $saleDTO) : bool
@@ -93,6 +115,14 @@ class SaleService extends BaseService
         EnsureSaleExistsAction::make()->execute($saleDTO);
 
         EnsureUserCanUpdateSaleAction::make()->execute($saleDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $saleDTO->user,
+                "itemable" => $saleDTO->sale,
+                "action" => ActivityActionEnum::DELETED->value
+            ])
+        );
 
         return DeleteSaleAction::make()->execute($saleDTO);
     }

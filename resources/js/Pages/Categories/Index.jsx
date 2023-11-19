@@ -13,13 +13,14 @@ import TextInput from '@/Components/TextInput';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import can from '@/Helpers/can';
 
 export default function Index({ auth, categories }) {
 
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
         name: '',
         description: '',
     });
@@ -122,7 +123,7 @@ export default function Index({ auth, categories }) {
     }
 
     function deleteCategory() {
-        router.delete(route("category.delete", modalData.id), {
+        routerDelete(route("category.delete", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} category has been successfully deleted.`)
@@ -139,11 +140,11 @@ export default function Index({ auth, categories }) {
 
             <div className="flex justify-between items-center my-4 p-2 max-w-3xl mx-auto">
                 <div className="text-sm text-gray-600">{categories.meta?.total ?? 0} categor{categories.meta?.total == 1 ? "y" : "ies"}</div>
-                <PrimaryButton onClick={newCategory}>new</PrimaryButton>
+                {can(auth.user?.data, "create", "categories") && <PrimaryButton onClick={newCategory}>new</PrimaryButton>}
             </div>
 
             <div className={`w-full px-6 py-12 gap-6 flex justify-center flex-wrap ${categories.meta?.total ? "md:grid grid-cols-1 md:grid-cols-2" : "flex justify-center"}`}>
-                {categories.meta?.total ? categories.data.map((category) =>(<CategoryCard
+                {categories.meta?.total ? categories.data?.map((category) =>(<CategoryCard
                     key={category.id}
                     category={category}
                     onDblClick={(e) => editCategory(category)}
@@ -221,8 +222,8 @@ export default function Index({ auth, categories }) {
                     <div className="mx-auto w-4/5 text-center mb-3">
                         <div className="text-gray-600">Are you sure you want to delete <span className="capitalize font-semibold">{modalData.name}</span> category</div>
                         <div className="flex justify-between items-center mt-3">
-                            <PrimaryButton onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
-                            <DeleteButton onClick={deleteCategory}>delete</DeleteButton>
+                            <PrimaryButton disabled={processing} onClick={() => setOpenModal(false)}>cancel</PrimaryButton>
+                            <DeleteButton disabled={processing} onClick={deleteCategory}>delete</DeleteButton>
                         </div>
                     </div>
                 )}

@@ -10,7 +10,9 @@ use App\Actions\Discount\EnsureUserCanCreateDiscountAction;
 use App\Actions\Discount\EnsureUserCanUpdateDiscountAction;
 use App\Actions\Discount\UpdateDiscountAction;
 use App\Actions\GetModelFromDTOAction;
+use App\DTOs\ActivityDTO;
 use App\DTOs\DiscountDTO;
+use App\Enums\ActivityActionEnum;
 
 class DiscountService extends BaseService
 {
@@ -20,7 +22,17 @@ class DiscountService extends BaseService
 
         EnsureUserCanCreateDiscountAction::make()->execute($discountDTO);
 
-        return CreateDiscountAction::make()->execute($discountDTO);
+        $discount = CreateDiscountAction::make()->execute($discountDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $discountDTO->user,
+                "itemable" => $discount,
+                "action" => ActivityActionEnum::CREATED->value
+            ])
+        );
+        
+        return $discount;
     }
 
     public function updateDiscount(DiscountDTO $discountDTO)
@@ -37,7 +49,17 @@ class DiscountService extends BaseService
 
         EnsureUserCanUpdateDiscountAction::make()->execute($discountDTO);
 
-        return UpdateDiscountAction::make()->execute($discountDTO);
+        $discount = UpdateDiscountAction::make()->execute($discountDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $discountDTO->user,
+                "itemable" => $discount,
+                "action" => ActivityActionEnum::UPDATED->value
+            ])
+        );
+        
+        return $discount;
     }
 
     public function deleteDiscount(DiscountDTO $discountDTO) : bool
@@ -53,6 +75,14 @@ class DiscountService extends BaseService
         EnsureDiscountExistsAction::make()->execute($discountDTO);
 
         EnsureUserCanUpdateDiscountAction::make()->execute($discountDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $discountDTO->user,
+                "itemable" => $discountDTO->discount,
+                "action" => ActivityActionEnum::DELETED->value
+            ])
+        );
 
         return DeleteDiscountAction::make()->execute($discountDTO);
     }

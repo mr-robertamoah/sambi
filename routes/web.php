@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/category/{category}', [CategoryController::class, 'delete'])->name('category.delete');
     Route::post('/category', [CategoryController::class, 'create'])->name('category.create');
     Route::get('/category', [CategoryController::class, 'index'])->name('category.index');
+
+    Route::get('/stats', StatsController::class)->name('stats.index');
     
     Route::post('/discount/{discount}', [DiscountController::class, 'update'])->name('discount.update');
     Route::delete('/discount/{discount}', [DiscountController::class, 'delete'])->name('discount.delete');

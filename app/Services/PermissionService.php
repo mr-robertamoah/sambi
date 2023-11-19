@@ -15,7 +15,9 @@ use App\Actions\Permission\EnsureValidDataExistsAction;
 use App\Actions\Permission\GetPermissionsAction;
 use App\Actions\Permission\SyncPermissionsAndUserAction;
 use App\Actions\Permission\UpdatePermissionAction;
+use App\DTOs\ActivityDTO;
 use App\DTOs\PermissionDTO;
+use App\Enums\ActivityActionEnum;
 use App\Models\Permission;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -86,6 +88,14 @@ class PermissionService extends BaseService
         EnsurePermissionsExistAction::make()->execute($permissionDTO);
 
         EnsureUserIsAuthorizedAction::make()->execute($permissionDTO, action: "assign");
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $permissionDTO->user,
+                "itemable" => $permissionDTO->assignee,
+                "action" => ActivityActionEnum::SYNCED->value
+            ])
+        );
 
         return SyncPermissionsAndUserAction::make()->execute($permissionDTO);
     } 

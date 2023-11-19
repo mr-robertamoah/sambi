@@ -11,6 +11,6 @@ class EnsurePermissionsWhereGivenAction extends Action
     {
         if (count($permissionDTO->permissionIds) > 0) return;
 
-        throw new PermissionException("Sorry! You need to provide the permissions to be attached to the role '{$permissionDTO->role->name}'.", 422);
+        throw new PermissionException("Sorry! You need to provide the permissions to be assigned to user.", 422);
     }
 }

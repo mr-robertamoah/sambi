@@ -115,6 +115,16 @@ class User extends Authenticatable
         return $this->hasMany(Permission::class);
     }
 
+    public function addedProductions()
+    {
+        return $this->hasMany(Production::class);
+    }
+
+    public function addedActivities()
+    {
+        return $this->hasMany(Activity::class);
+    }
+
     public function isPermittedTo(
         ?string $name = null,
         ?array $names = null,
@@ -147,6 +157,11 @@ class User extends Authenticatable
     public function addedCost($cost)
     {
         return $cost->user->is($this);
+    }
+
+    public function addedProduction($production)
+    {
+        return $production->user->is($this);
     }
 
     public function addedSale($sale)
@@ -184,6 +199,22 @@ class User extends Authenticatable
     {
         return $query->where(function ($query) {
             $query->whereHas("addedSales");
+        });
+    }
+
+    public function scopeWhereAddedProduction($query)
+    {
+        return $query->where(function ($query) {
+            $query->whereHas("addedProductions");
+        });
+    }
+
+    public function scopeWhereNotPermittedTo($query, $permissions)
+    {
+        return $query->where(function ($query) use ($permissions) {
+            $query->whereDoesntHave("assignedPermissions", function ($query) use ($permissions) {
+                $query->whereIn("name", $permissions);
+            });
         });
     }
 }

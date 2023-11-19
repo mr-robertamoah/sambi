@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasActivityItemableTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,7 @@ class Sale extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use HasActivityItemableTrait;
 
     protected $fillable = ["date", "number_of_units", "product_id", "buyer_name", "note", "discount_id"];
 

@@ -26,7 +26,8 @@ class DashboardController extends Controller
             "categories" => $user->isPermittedTo(
                 names: [
                     PermissionEnum::CAN_MANAGE_ALL->value, 
-                    PermissionEnum::CAN_MANAGE_CATEGORY->value
+                    PermissionEnum::CAN_MANAGE_CATEGORY->value,
+                    PermissionEnum::CAN_MAKE_CATEGORY_ENTRY->value,
                 ],
             ) ? Category::query()->count() : null,
             "costItems" => $user->isPermittedTo(
@@ -61,6 +62,7 @@ class DashboardController extends Controller
                 names: [
                     PermissionEnum::CAN_MANAGE_ALL->value,
                     PermissionEnum::CAN_ASSIGN_PERMISSION->value,
+                    PermissionEnum::CAN_MANAGE_USER->value,
                 ],
             ) ? Permission::query()->count() : null,
             "discounts" => $user->isPermittedTo(

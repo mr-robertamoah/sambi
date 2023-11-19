@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasActivityItemableTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,6 +11,7 @@ class CostItem extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use HasActivityItemableTrait;
 
     protected $fillable = ["name", "description", "unit_charge", "unit", "category_id"];
 

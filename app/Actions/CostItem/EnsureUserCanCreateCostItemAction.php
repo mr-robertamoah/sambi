@@ -15,6 +15,7 @@ class EnsureUserCanCreateCostItemAction extends Action
             $costItem->user->isPermittedTo(names: [
                 PermissionEnum::CAN_MANAGE_ALL->value,
                 PermissionEnum::CAN_MANAGE_COST_ITEM->value,
+                PermissionEnum::CAN_MAKE_COST_ITEM_ENTRY->value,
             ])
         ) return;
 

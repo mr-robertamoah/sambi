@@ -47,11 +47,11 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
 
         post(route('profile.update'), {
             onSuccess: (res) => {
-                data.image_id = res.props.auth.user.data.image?.id
+                data.image_id = res.props.auth.user.data?.image?.id
                 data.image = null
                 setImage({
-                    src: res.props.auth.user.data.image?.src,
-                    name: res.props.auth.user.data.image?.name,
+                    src: res.props.auth.user.data?.image?.src,
+                    name: res.props.auth.user.data?.image?.name,
                     file: null
                 })
             }

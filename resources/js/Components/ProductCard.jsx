@@ -1,14 +1,23 @@
+import { usePage } from "@inertiajs/react"
 import DeleteButton from "./DeleteButton"
 import Image from "./Image"
+import can from "@/Helpers/can"
+import { useEffect, useState } from "react"
 
 export default function ProductCard({onDblClick = null, product, onDelete = null, ...props}) {
+    let user = usePage().props.auth.user?.data
+    let [canUpdate, setCanUpdate] = useState(false)
 
     if (!product) {
         return (<></>)
     }
 
+    useEffect(() => {
+        setCanUpdate(can(user, "update", "products", product.user))
+    }, [])
+
     function clicked(event) {
-        if (event.detail == 2 && onDblClick) {
+        if (event.detail == 2 && onDblClick && canUpdate) {
             onDblClick(event)
         }
     }
@@ -38,7 +47,7 @@ export default function ProductCard({onDblClick = null, product, onDelete = null
                     <div className="">added by {product.user.name}</div>
                     <div>{product.createdAt}</div>
                 </div>
-                <DeleteButton title={`delete ${product.name} cost item`} onClick={deleteProduct}>delete</DeleteButton>
+                {canUpdate && <DeleteButton title={`delete ${product.name} cost item`} onClick={deleteProduct}>delete</DeleteButton>}
             </div>
         </div>
     )

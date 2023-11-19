@@ -11,7 +11,9 @@ use App\Actions\CostItem\EnsureCostItemExistsAction;
 use App\Actions\CostItem\UpdateCostItemAction;
 use App\Actions\EnsureUserExistsAction;
 use App\Actions\GetModelFromDTOAction;
+use App\DTOs\ActivityDTO;
 use App\DTOs\CostItemDTO;
+use App\Enums\ActivityActionEnum;
 
 class CostItemService extends BaseService
 {
@@ -29,7 +31,17 @@ class CostItemService extends BaseService
 
         EnsureUserCanCreateCostItemAction::make()->execute($costItemDTO);
 
-        return CreateCostItemAction::make()->execute($costItemDTO);
+        $costItem = CreateCostItemAction::make()->execute($costItemDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $costItemDTO->user,
+                "itemable" => $costItem,
+                "action" => ActivityActionEnum::CREATED->value
+            ])
+        );
+        
+        return $costItem;
     }
 
     public function updateCostItem(CostItemDTO $costItemDTO)
@@ -56,7 +68,17 @@ class CostItemService extends BaseService
 
         EnsureUserCanUpdateCostItemAction::make()->execute($costItemDTO);
 
-        return UpdateCostItemAction::make()->execute($costItemDTO);
+        $costItem = UpdateCostItemAction::make()->execute($costItemDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $costItemDTO->user,
+                "itemable" => $costItem,
+                "action" => ActivityActionEnum::UPDATED->value
+            ])
+        );
+        
+        return $costItem;
     }
 
     public function deleteCostItem(CostItemDTO $costItemDTO) : bool
@@ -72,6 +94,14 @@ class CostItemService extends BaseService
         EnsureCostItemExistsAction::make()->execute($costItemDTO);
 
         EnsureUserCanUpdateCostItemAction::make()->execute($costItemDTO);
+
+        ActivityService::new()->createActivity(
+            ActivityDTO::new()->fromArray([
+                "user" => $costItemDTO->user,
+                "itemable" => $costItemDTO->costItem,
+                "action" => ActivityActionEnum::DELETED->value
+            ])
+        );
 
         return DeleteCostItemAction::make()->execute($costItemDTO);
     }

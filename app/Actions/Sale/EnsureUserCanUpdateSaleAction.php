@@ -14,12 +14,11 @@ class EnsureUserCanUpdateSaleAction extends Action
         if (
             $saleDTO->user->isPermittedTo(names: [
                 PermissionEnum::CAN_MANAGE_ALL->value,
-                PermissionEnum::CAN_MANAGE_COST->value,
+                PermissionEnum::CAN_MANAGE_SALE->value,
             ]) ||
             $saleDTO->user->addedSale($saleDTO->sale)
         ) return;
 
-        $tag = $saleDTO->sale->tag ? $saleDTO->sale->tag . " " : "";
-        throw new SaleException("Sorry, you are not permitted to update {$tag}sale. Alert administrator if you think this is a mistake.", 422);
+        throw new SaleException("Sorry, you are not permitted to update sale of {$saleDTO->sale->product->name} product. Alert administrator if you think this is a mistake.", 422);
     }
 }

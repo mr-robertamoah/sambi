@@ -8,7 +8,9 @@ enum ActivityActionEnum: string
 {
     use EnumTrait;
     
-    case created = "CREATED";
-    case deleted = "DELETED";
-    case updated = "UPDATED";
+    case CREATED = "created";
+    case DELETED = "deleted";
+    case UPDATED = "updated";
+    case ASSIGED = "assiged";
+    case SYNCED = "synced";
 }

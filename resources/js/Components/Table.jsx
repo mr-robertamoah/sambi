@@ -4,9 +4,9 @@ import ProfilePicture from "./ProfilePicture";
 import Paginator from "./Paginator";
 
 export default function Table({
-    heading, cols, data, actions,
+    heading, cols, data, actions, hasAddedBy = true,
     rowDataKeys, links, strips, children,
-    rowClassName, rowIdx, scrollable
+    rowClassName, rowIdx, scrollable, disableActions
 }) {
     
     function isEven(num) {
@@ -45,7 +45,7 @@ export default function Table({
                         >{heading}</th>
                     </tr>}
                     <tr className="rounded-bl bg-slate-600 rounded py-4 text-sm text-white capitalize">
-                        <th className="py-4 my-2 min-h-[20px]">Added By</th>
+                        {hasAddedBy && <th className="py-4 my-2 min-h-[20px]">Added By</th>}
                             {cols?.length ?
                                 cols.map((col, idx) => <th key={idx} className={"py-4 my-2 min-h-[20px] " + idx == cols.length - 1 ? "rounded-br" : ""}>{col}</th>) :
                                 <th className="py-4 my-2 min-h-[20px]" colSpan={cols.length}>no columns</th>}
@@ -54,7 +54,7 @@ export default function Table({
                 <tbody>
                     {data?.length ? data.map((item, index) => <tr 
                         className={(strips && isEven(index + 1) ? "bg-slate-100 " : "") + ` text-sm font-normal table-row border-b-2 whitespace-nowrap overflow-x-auto`} key={index + 1}>
-                        <td className="font-normal py-4 px-2 border-r-2 min-h-[20px] whitespace-nowrap">
+                        { hasAddedBy && <td className="font-normal py-4 px-2 border-r-2 min-h-[20px] whitespace-nowrap">
                             <div className="flex justify-start w-full items-center">
                                     <ProfilePicture
                                     src={item.user.image?.src}
@@ -64,22 +64,22 @@ export default function Table({
                                 ></ProfilePicture>
                                 <div>{item.user.name}</div>
                             </div>
-                        </td>
+                        </td>}
                         {rowDataKeys?.length && rowDataKeys.map((key, idx) => 
                             <td 
                                 key={idx} 
                                 className={`font-normal py-4 px-2 border-r-2 min-h-[20px] min-w-[50px] whitespace-nowrap ` + (rowIdx?.includes(idx) && rowClassName ? rowClassName : "")}
                             >{typeof key == "function" ? key(item) : _.get(item, key)}</td>)}
-                        <td className="border-r-2">
+                        {item.createdAt && <td className="border-r-2">
                             <div className="font-normal whitespace-nowrap text-center">{item.createdAt}</div>
-                        </td>
-                        <td className="text-center">
-                            {actions?.length && actions.map(action => <ActionButton key={`${action.text}${item.id}`}
+                        </td>}
+                        {actions && <td className="text-center">
+                            {actions.length ? actions.map(action => <ActionButton key={`${action.text}${item.id}`}
                                 onClick={() => action.func(item)}
                                 className={action.className + " mx-3"}
-                                disabled={action.disabled(item)}
-                            >{action.text}</ActionButton>)}
-                        </td>
+                                disabled={disableActions(item) || action.disabled(item)}
+                            >{action.text}</ActionButton>) : <div className="text-sm text-gray-600 mx-2 text-center">no actions</div>}
+                        </td>}
                     </tr>) :
                     <tr>
                         <td colSpan="100%" className="h-[20px] py-4 px-2 col-span-3 text-center">not item</td>
