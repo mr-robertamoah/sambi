@@ -66,7 +66,7 @@ class ProductController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function remove(Request $request)
     {
         try {
             ProductService::make()->deleteProduct(

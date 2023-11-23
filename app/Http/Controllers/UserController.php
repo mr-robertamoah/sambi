@@ -51,7 +51,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function delete(Request $request)
+    public function remove(Request $request)
     {
         try {
             UserService::make()->deleteUser(

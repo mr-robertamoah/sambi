@@ -79,7 +79,7 @@ class CostItemController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function remove(Request $request)
     {
         try {
             CostItemService::new()->deleteCostItem(

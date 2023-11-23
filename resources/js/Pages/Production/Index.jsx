@@ -25,7 +25,7 @@ export default function Index({ auth, production, users, products, filtered, fil
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         product_id: '',
         quantity: '',
         date: "",
@@ -175,7 +175,7 @@ export default function Index({ auth, production, users, products, filtered, fil
     }
 
     function deleteProduction() {
-        routerDelete(route("production.delete", modalData.id), {
+        post(route("production.remove", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} production item has been successfully deleted.`)

@@ -20,7 +20,7 @@ export default function Index({ auth, discounts, users, permission }) {
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         assignee_id: '',
         name: '',
         permission_ids: [],
@@ -131,7 +131,7 @@ export default function Index({ auth, discounts, users, permission }) {
     }
 
     function deleteDiscount() {
-        routerDelete(route("discount.delete", modalData.id), {
+        post(route("discount.remove", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} discount has been successfully deleted.`)

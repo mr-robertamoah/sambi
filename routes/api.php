@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Route;
 Route::group(["middleware"=> "auth:sanctum"], function () {
 
     Route::get('/permission/{permission}/detail', [PermissionController::class, 'detail'])->name('permission.detail');
-    Route::get('/permission', [PermissionController::class, 'getPermissions'])
-        ->name('permissions.get');
+    Route::get('/permission_activity', [PermissionController::class, 'getUserDetails'])
+        ->name('user.details');
     
 });
 

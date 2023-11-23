@@ -17,7 +17,7 @@ export default function Dashboard({
             <Head title="Dashboard" />
 
             <div className="py-12 grid grid-cols-1 md:grid-cols-2 gap-6 flex-wrap">
-                {stats != null && <DashboardCard noNumberOfEntries={true} title="stats" cardRoute={route("stats.index")}>
+                {stats && <DashboardCard noNumberOfEntries={true} title="stats" cardRoute={route("stats.index")}>
                     <p>This section allows you to see the various statistics on each of the important entities. Remember, the filter is your best friend here.</p>
                     <p>The following are some of information you will see on that page:</p>
                     <ul className="list-disc px-6 text-sm py-2">

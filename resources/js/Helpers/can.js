@@ -4,13 +4,14 @@ export default function can(user, action, entity, entityUser = null) {
     if (user.permissions?.find((value) => value.name == permissionEnum.CAN_MANAGE_ALL)) return true
     if (action == "update" && user.id == entityUser?.id) return true
     
+    let permitted = false
     user.permissions?.forEach(perm => {
         if (permissions[entity]) {
-            if (permissions[entity][action]?.includes(perm)) return true
+            if (permissions[entity][action]?.includes(perm.name)) permitted = true
         }
     });
 
-    return false
+    return permitted
 }
 
 export const permissions = 

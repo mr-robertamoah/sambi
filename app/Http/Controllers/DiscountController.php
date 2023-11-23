@@ -87,7 +87,7 @@ class DiscountController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function remove(Request $request)
     {
         try {
             DiscountService::make()->deleteDiscount(

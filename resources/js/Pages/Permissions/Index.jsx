@@ -26,7 +26,7 @@ export default function Index({ auth, permissions }) {
     let [success, setSuccess] = useState()
     let [search, setSearch] = useState("")
     let [action, setAction] = useState("create")
-    const { data, setData, delete: routeDelete, get, post, processing, errors, reset } = useForm({
+    const { data, setData, post, put, processing, errors, reset } = useForm({
         name: '',
         description: '',
     });
@@ -143,7 +143,7 @@ export default function Index({ auth, permissions }) {
     }
 
     function deletePermission() {
-        routeDelete(route("permission.delete", modalData.id), {
+        post(route("permission.remove", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setPermissionsData(null)

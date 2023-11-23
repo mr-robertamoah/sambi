@@ -21,7 +21,7 @@ export default function Index({ auth, costItems }) {
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
         description: '',
         category_id: '',
@@ -133,7 +133,7 @@ export default function Index({ auth, costItems }) {
     }
 
     function deleteCostItem() {
-        routerDelete(route("cost_item.delete", modalData.id), {
+        post(route("cost_item.remove", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} cost item has been successfully deleted.`)

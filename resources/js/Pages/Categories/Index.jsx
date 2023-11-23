@@ -20,7 +20,7 @@ export default function Index({ auth, categories }) {
     let [openModal, setOpenModal] = useState(false)
     let [success, setSuccess] = useState()
     let [action, setAction] = useState("create")
-    const { data, setData, post, processing, errors, reset, clearErrors, delete: routerDelete } = useForm({
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: '',
         description: '',
     });
@@ -42,12 +42,6 @@ export default function Index({ auth, categories }) {
         if (errors.failed && openModal) errors.failed = null
         
     }, [openModal])
-
-    // useEffect(function () {
-    //     if (!(success && errors.failed) && action == "delete") {
-    //         setOpenModal(false)
-    //     }
-    // }, [success, errors.failed])
 
     function toggleModal() {
         setOpenModal(!openModal)
@@ -123,7 +117,7 @@ export default function Index({ auth, categories }) {
     }
 
     function deleteCategory() {
-        routerDelete(route("category.delete", modalData.id), {
+        post(route("category.remove", modalData.id), {
             onSuccess: (e) => {
                 setModalData(newData)
                 setSuccess(`${modalData.name} category has been successfully deleted.`)

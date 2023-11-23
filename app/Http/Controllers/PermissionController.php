@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Actions\ApiErrorHandlingAction;
 use App\Actions\WebErrorHandlingAction;
+use App\DTOs\ActivityDTO;
 use App\DTOs\PermissionDTO;
 use App\Enums\PaginationEnum;
 use App\Enums\PermissionEnum;
 use App\Http\Requests\CreatePermissionRequest;
 use App\Http\Requests\UpdatePermissionRequest;
+use App\Http\Resources\ActivityResource;
 use App\Http\Resources\AssignedUserResource;
 use App\Http\Resources\PermissionDetailResource;
 use App\Http\Resources\PermissionResource;
 use App\Models\Permission;
 use App\Models\User;
+use App\Services\ActivityService;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -73,7 +76,7 @@ class PermissionController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function remove(Request $request)
     {
         try {
             PermissionService::new()->deletePermission(
@@ -105,7 +108,7 @@ class PermissionController extends Controller
         }
     }
 
-    public function getPermissions(Request $request)
+    public function getUserDetails(Request $request)
     {
         try {
             return response()->json([
@@ -115,7 +118,12 @@ class PermissionController extends Controller
                         "like" => $request->like,
                         "assigneeId" => $request->assignee_id,
                     ])
-                )
+                ),
+                "activities" => ActivityResource::collection(ActivityService::new()->getUserActivities(
+                    ActivityDTO::new()->fromArray([
+                        "user" => User::find($request->assignee_id)
+                    ])
+                ))
             ]);
         } catch (\Throwable $th) {
             //throw $th;

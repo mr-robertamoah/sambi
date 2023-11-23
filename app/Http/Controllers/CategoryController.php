@@ -73,7 +73,7 @@ class CategoryController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function remove(Request $request)
     {
         try {
             CategoryService::new()->deleteCategory(

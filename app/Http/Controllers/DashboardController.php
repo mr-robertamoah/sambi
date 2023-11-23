@@ -22,7 +22,13 @@ class DashboardController extends Controller
         $user = $request->user();
 
         return Inertia::render('Dashboard', [
-            "products" => Product::query()->count(),
+            "products" => $user->isPermittedTo(
+                names: [
+                    PermissionEnum::CAN_MANAGE_ALL->value, 
+                    PermissionEnum::CAN_MANAGE_PRODUCT->value,
+                    PermissionEnum::CAN_MAKE_PRODUCT_ENTRY->value,
+                ],
+            ) ? Product::query()->count() : null,
             "categories" => $user->isPermittedTo(
                 names: [
                     PermissionEnum::CAN_MANAGE_ALL->value, 

@@ -19,6 +19,7 @@ export default function Index({ auth, users }) {
     let [processing, setProcessing] = useState()
     let [success, setSuccess] = useState()
     let [searching, setSearching] = useState(false)
+    let [activities, setActivities] = useState([])
     let [permissions, setPermissions] = useState([])
     let [existingPermissions, setExistingPermissions] = useState([])
     let [removedPermissions, setRemovedPermissions] = useState([])
@@ -64,7 +65,8 @@ export default function Index({ auth, users }) {
 
     function viewUser(user) {
         setAction("view")
-        debounceSearch(user.id)
+        setActivities([])
+        getUserDetails(user.id)
         setPermissions([])
         setAddedPermissions([])
         setRemovedPermissions([])
@@ -123,9 +125,8 @@ export default function Index({ auth, users }) {
 
     function deleteUser() {
         setProcessing(true)
-        router.delete(route("user.delete", modalData.id), {
+        router.post(route("user.remove", modalData.id), {}, {
             onSuccess: () => {
-                setProcessing(false)
                 setSuccess(`${modalData.name} user has been successfully deleted.`)
                 setModalData(newData)
             },
@@ -135,21 +136,23 @@ export default function Index({ auth, users }) {
                     return {failed: e.failed}
                 })
             },
-            onFinish: () => setProcessing(false)
+            onFinish: () => {
+                setProcessing(false)
+                setOpenModal(false)
+            }
         })
     }
 
-    let debounceSearch = useMemo((id) => _.debounce(() => getPermissions(id), 200), [])
-
-    function getPermissions(id) {
+    function getUserDetails(id) {
         setSearching(true)
-        axios.get(route("permissions.get") + `?assignee_id=${id}`)
+        axios.get(route("user.details") + `?assignee_id=${id}`)
         .then((res) => {
                 setPermissions(res.data ? res.data?.permissions.data : [])
+                setActivities(res.data ? res.data?.activities : [])
                 setProcessing(false)
             })
         .catch((e) => {
-                console.error(e, "getPermissions")
+                console.error(e, "getUserDetails")
                 setErrors(() => {
                     return {failed: e.response.data?.message}
                 })
@@ -199,7 +202,11 @@ export default function Index({ auth, users }) {
             >
                 <div className="overflow-y-auto">
                     <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 uppercase">user</div>
-                    
+                    <Back
+                                onClick={()=> setOpenModal(false)}
+                                title="go back"
+                                className="cursor-pointer text-gray-600 font-semibold absolute top-5 left-2 bg-gray-200 p-2 rounded-full"
+                            ></Back>
                     <div className="mt-4 w-full">
                         <Alert
                             show={errors.failed || success}
@@ -215,10 +222,7 @@ export default function Index({ auth, users }) {
                     </div>
                     {action != "delete" && (<div className="flex justify-start items-center overflow-x-auto px-5 relative">
                         <div className="mt-4 flex justify-end max-w-[60%] items-center mx-4 shrink-0 bg-gray-50 p-2 rounded w-full">
-                            {canAssign && <Back
-                                onClick={()=> setOpenModal(false)}
-                                title="go back"
-                                className="cursor-pointer text-gray-600 font-semibold absolute top-0 bg-gray-200 p-2 rounded-full"></Back>}
+                            
                             <div className="mx-5 w-full text-center">
                                 <div className="text-sm text-gray-600">
                                     <div className="text-lg text-gray-800 font-semibold mt-4 text-center mb-4 capitalize">{modalData.name}</div>
@@ -309,10 +313,23 @@ export default function Index({ auth, users }) {
                         </>)}
                         </form>
 
-                        {can(auth.user?.data, "manage", "users") && <div>
-                            <div>activities section</div>
-                        </div>} 
-                        {/* TODO */}
+                        {can(auth.user?.data, "manage", "users") && <div className='mx-4'>
+                            <div className='text-center w-full text-slate-800 font-semibold capitalize mb-2'>recent activit{activities.length == 1 ? "y" : "ies"}</div>
+                            <div className='text-xs text-gray-400 mb-4 p-2'><span className='uppercase text-red-400'>note</span>: you will see a maximum of 20 recent activities.</div>
+                            <div className='max-h-[600px] overflow-y-auto text-sm'>
+                            {activities.length ? 
+                                <div className="mx-auto p-2 min-w-[200px] h-full shrink-0">
+                                {activities.map((activity, idx) =>
+                                    <div 
+                                        key={idx}
+                                        className='whitespace-nowrap p-2 bg-slate-200 text-slate-600 mb-2 rounded'
+                                    >{activity.description}</div>
+                                )} 
+                                
+                                </div> :
+                                <div className='text-gray-600 text-center min-w-[300px]'>no activities</div>}
+                            </div>
+                        </div>}
                     </div>)}
                     {action == "delete" && (
                         <div className="mx-auto w-4/5 text-center mb-3">

@@ -123,7 +123,7 @@ class SaleController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function remove(Request $request)
     {
         try {
             SaleService::new()->deleteSale(

@@ -105,7 +105,7 @@ class ProductionController extends Controller
         }
     }
 
-    public function delete(Request $request)
+    public function remove(Request $request)
     {
         try {
             ProductionService::new()->deleteProduction(
